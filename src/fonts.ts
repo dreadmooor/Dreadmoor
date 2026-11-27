@@ -1,21 +1,51 @@
-import { continueRender, delayRender, staticFile } from "remotion";
+import { continueRender, delayRender } from 'remotion';
 
-// Persian fonts (both SIL OFL): Vazirmatn for text/labels, Lalezar for headlines and hero numbers.
-// Your own fonts: drop the .ttf into public/fonts/ and change the family/file below — every style reads these two names.
-export const FONT_TEXT = "Vazirmatn";
-export const FONT_NUM = "Lalezar";
+const GOOGLE_FONTS_HOST = 'https://fonts.googleapis.com';
+const GOOGLE_FONTS_PATH = '/css2?family=Lalezar&family=Vazirmatn:wght@400;600;700;800&display=swap';
 
-const fonts: [string, string][] = [
-  [FONT_TEXT, "fonts/Vazirmatn-SemiBold.ttf"],
-  [FONT_NUM, "fonts/Lalezar-Regular.ttf"],
-];
+let fontsLoadPromise: Promise<void> | null = null;
 
-const handle = delayRender("Loading fonts");
-Promise.all(
-  fonts.map(([family, file]) => {
-    const face = new FontFace(family, `url('${staticFile(file)}') format('truetype')`);
-    return face.load().then((f) => document.fonts.add(f));
-  }),
-)
-  .then(() => continueRender(handle))
-  .catch((err) => console.error("Font load failed", err));
+export const ensurePersianFontsLoaded = async (): Promise<void> => {
+  if (typeof document === 'undefined') {
+    return;
+  }
+
+  if (!fontsLoadPromise) {
+    fontsLoadPromise = (async () => {
+      const existingLink = document.querySelector(
+        `link[data-persian-fonts="true"]`
+      ) as HTMLLinkElement | null;
+
+      if (!existingLink) {
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = `${GOOGLE_FONTS_HOST}${GOOGLE_FONTS_PATH}`;
+        link.setAttribute('data-persian-fonts', 'true');
+        document.head.appendChild(link);
+      }
+
+      if ('fonts' in document && document.fonts?.ready) {
+        await document.fonts.ready;
+        await Promise.allSettled([
+          document.fonts.load('400 48px "Lalezar"'),
+          document.fonts.load('600 43px "Vazirmatn"'),
+          document.fonts.load('700 34px "Vazirmatn"'),
+          document.fonts.load('800 43px "Vazirmatn"'),
+        ]);
+      }
+    })();
+  }
+
+  await fontsLoadPromise;
+};
+
+export const useWaitForPersianFonts = (): void => {
+  if (typeof document === 'undefined' || !('fonts' in document)) {
+    return;
+  }
+
+  const handle = delayRender('Loading Persian fonts (Lalezar & Vazirmatn)');
+  ensurePersianFontsLoaded().finally(() => {
+    continueRender(handle);
+  });
+};

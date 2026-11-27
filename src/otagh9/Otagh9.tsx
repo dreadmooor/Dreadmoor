@@ -1,9 +1,7 @@
 import React from 'react';
 import {
   AbsoluteFill,
-  Audio,
   Sequence,
-  staticFile,
   useCurrentFrame,
   useVideoConfig,
   interpolate,
@@ -147,7 +145,6 @@ const Scene1HotelExterior: React.FC = () => {
 
   return (
     <AbsoluteFill style={{ backgroundColor: '#080e17', overflow: 'hidden' }}>
-      <Audio src={staticFile('voice/otagh9/scene1_narrator.mp3')} />
       <div style={{ width: '100%', height: '100%', transform: `scale(${scale})` }}>
         <svg viewBox="0 0 1080 1920" width="1080" height="1920">
           <defs>
@@ -280,7 +277,6 @@ const Scene2CorridorDoor9: React.FC = () => {
 
   return (
     <AbsoluteFill style={{ backgroundColor: '#09101a', overflow: 'hidden' }}>
-      <Audio src={staticFile('voice/otagh9/scene2_narrator.mp3')} />
       <div style={{ width: '100%', height: '100%', transform: `scale(${zoom})` }}>
         <svg viewBox="0 0 1080 1920" width="1080" height="1920">
           <defs>
@@ -354,13 +350,6 @@ const Scene3ManagerWarning: React.FC = () => {
 
   return (
     <AbsoluteFill style={{ backgroundColor: '#0d1520', overflow: 'hidden' }}>
-      <Sequence from={0} durationInFrames={105}>
-        <Audio src={staticFile('voice/otagh9/scene3_narrator.mp3')} />
-      </Sequence>
-      <Sequence from={105} durationInFrames={195}>
-        <Audio src={staticFile('voice/otagh9/scene3_manager.mp3')} />
-      </Sequence>
-
       <div style={{ width: '100%', height: '100%', transform: `scale(${scale})` }}>
         <svg viewBox="0 0 1080 1920" width="1080" height="1920">
           <defs>
@@ -430,35 +419,15 @@ const Scene3ManagerWarning: React.FC = () => {
   );
 };
 
-/* صحنه ۴: صدای مادر از پشت در (با فضای کافی برای اتمام کامل هر فایل صوتی) */
+/* صحنه ۴: صدای مادر از پشت در */
 const Scene4MotherVoice: React.FC = () => {
   const frame = useCurrentFrame();
   const isMotherSpeaking = frame >= 95 && frame < 210;
   const waveOffset = (frame * 3.5) % 65;
   const microTremor = frame >= 95 && frame < 225 ? Math.sin(frame * 1.8) * 3 : 0;
 
-  const motherMainVolume = isMotherSpeaking
-    ? interpolate(Math.sin(frame * 0.9), [-1, 1], [0.58, 0.75])
-    : 0;
-
   return (
     <AbsoluteFill style={{ backgroundColor: '#090f18', overflow: 'hidden' }}>
-      {/* بخش ۱: راوی */}
-      <Sequence from={0} durationInFrames={95}>
-        <Audio src={staticFile('voice/otagh9/scene4_narrator1.mp3')} />
-      </Sequence>
-      {/* بخش ۲: صدای مادر از پشت در (حجم کنترل‌شده + اکو کوتاه پشت در، بدون بریده شدن انتهای صدا) */}
-      <Sequence from={95} durationInFrames={115}>
-        <Audio src={staticFile('voice/otagh9/scene4_mother.mp3')} volume={motherMainVolume} />
-      </Sequence>
-      <Sequence from={100} durationInFrames={115}>
-        <Audio src={staticFile('voice/otagh9/scene4_mother.mp3')} volume={0.2} />
-      </Sequence>
-      {/* بخش ۳: ادامه توضیح راوی */}
-      <Sequence from={210} durationInFrames={180}>
-        <Audio src={staticFile('voice/otagh9/scene4_narrator2.mp3')} />
-      </Sequence>
-
       <svg viewBox="0 0 1080 1920" width="1080" height="1920">
         <rect width="1080" height="1920" fill="#090f18" />
 
@@ -532,7 +501,6 @@ const Scene5OldPhoto: React.FC = () => {
 
   return (
     <AbsoluteFill style={{ backgroundColor: '#101822', overflow: 'hidden' }}>
-      <Audio src={staticFile('voice/otagh9/scene5_narrator.mp3')} />
       <svg viewBox="0 0 1080 1920" width="1080" height="1920">
         <rect width="1080" height="1920" fill="#101822" />
 
@@ -595,7 +563,6 @@ const Scene6DoorknobTurn: React.FC = () => {
 
   return (
     <AbsoluteFill style={{ backgroundColor: '#18100d', overflow: 'hidden' }}>
-      <Audio src={staticFile('voice/otagh9/scene6_narrator.mp3')} />
       <svg viewBox="0 0 1080 1920" width="1080" height="1920">
         <defs>
           <linearGradient id="brassPlate" x1="0" y1="0" x2="1" y2="1">
@@ -667,7 +634,6 @@ const Scene7ChoiceScreen: React.FC = () => {
         justifyContent: 'center',
       }}
     >
-      <Audio src={staticFile('voice/otagh9/scene7_narrator.mp3')} />
       <FilmAtmosphere />
       <div style={{ textAlign: 'center', marginBottom: 56, zIndex: 30 }}>
         <div
@@ -819,7 +785,7 @@ export const Otagh9: React.FC = () => {
         پرونده مرموز: <span style={{ color: '#ff5722' }}>اتاق ۹</span>
       </div>
 
-      {/* تایم‌لاین کامل با فضای تنفس کافی تا هیچ دیالوگی آخرش قطع نشود (مجموع ۶۶ ثانیه = ۱۹۸۰ فریم) */}
+      {/* تایم‌لاین کامل بدون صداهای داخلی تا صدا را خودت دستی روی ویدئو بگذاری (مجموع ۶۶ ثانیه = ۱۹۸۰ فریم) */}
       <Sequence from={0} durationInFrames={270}>
         <Scene1HotelExterior />
       </Sequence>

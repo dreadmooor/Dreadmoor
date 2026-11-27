@@ -7,90 +7,115 @@ if (!API_KEY) {
   process.exit(1);
 }
 
-// مدل eleven_v3 دارای پشتیبانی بومی و طبیعی از زبان فارسی است
-const MODEL_ID = 'eleven_v3';
+const MODEL_ID = 'eleven_multilingual_v2';
 const OUTPUT_DIR = path.resolve('public/voice/otagh9');
 fs.mkdirSync(OUTPUT_DIR, { recursive: true });
 
-// تنظیم صداها برای مدل v3 فارسی
-const VOICES = {
-  narrator: {
-    id: 'JBFqnCBsd6RMkjVDRZzb', // George - راوی مردانه عمیق، گرم و داستان‌گو
-    settings: { stability: 0.5, similarity_boost: 0.75, style: 0.35, use_speaker_boost: true },
-  },
-  old_man: {
-    id: 'pqHfZKP75CvOlQylNhV4', // Bill - مرد مسن و جدی (مدیر هتل)
-    settings: { stability: 0.55, similarity_boost: 0.8, style: 0.45, use_speaker_boost: true },
-  },
-  woman: {
-    id: 'XrExE9yKIg1WjnnlVkGX', // Matilda - زنانه گرم، احساسی و مرموز (مادر نوید)
-    settings: { stability: 0.45, similarity_boost: 0.8, style: 0.45, use_speaker_boost: true },
-  },
-  young_man: {
-    id: 'TX3LPaxmHKxFdv7VOQHJ', // Liam - مرد جوان (برای دیالوگ‌های نوید)
-    settings: { stability: 0.5, similarity_boost: 0.75, style: 0.35, use_speaker_boost: true },
-  },
+// بانک پیش‌فرض صداها (در صورت نیاز می‌توانید با ELEVENLABS_*_VOICE_ID در محیط override کنید)
+const DEFAULT_VOICES = {
+  narrator: process.env.ELEVENLABS_NARRATOR_VOICE_ID || 'onwK4e9ZLuTAKqWW03F9', // Daniel - راوی مردانه با لحن آرام و رادیویی
+  old_man: process.env.ELEVENLABS_OLD_MAN_VOICE_ID || 'pqHfZKP75CvOlQylNhV4',   // Bill - مرد مسن و جدی (مدیر هتل)
+  woman: process.env.ELEVENLABS_WOMAN_VOICE_ID || 'Xb7hH8MSUJpSbSDYk0k2',     // Alice - زنانه شفاف و احساسی (مادر نوید)
+  young_man: process.env.ELEVENLABS_YOUNG_MAN_VOICE_ID || 'TX3LPaxmHKxFdv7VOQHJ',
 };
 
-// متن‌ها با اعراب‌گذاری دقیق برای تلفظ طبیعی و بدون لهجه در فارسی
+const ROLE_SETTINGS = {
+  narrator: { stability: 0.62, similarity_boost: 0.78, style: 0.15, use_speaker_boost: true },
+  old_man: { stability: 0.68, similarity_boost: 0.82, style: 0.3, use_speaker_boost: true },
+  woman: { stability: 0.52, similarity_boost: 0.8, style: 0.35, use_speaker_boost: true },
+  young_man: { stability: 0.55, similarity_boost: 0.78, style: 0.25, use_speaker_boost: true },
+};
+
+// متن دقیق و کامل داستان «اتاق ۹» بدون اعراب‌گذاری مصنوعی
 const CLIPS = [
   {
     id: 'scene1_narrator',
     role: 'narrator',
-    text: 'یک هُتِلِ قَدیمی قَرار اَست تَخریب شَوَد. نَوید، عَکّاسِ جَوان، بَرایِ تَهیّه‌یِ آخَرین تَصاویر وارِدِ ساختِمان می‌شَوَد.',
+    text: 'یک هتل قدیمی قرار است تخریب شود. نوید، عکاس جوان، برای تهیه آخرین تصاویر وارد ساختمان می‌شود.',
   },
   {
     id: 'scene2_narrator',
     role: 'narrator',
-    text: 'دَر راهرو، مُتِوَجّهِ دَری می‌شَوَد که رویِ آن نِوِشته شُده: اُتاقِ نُه.',
+    text: 'در راهرو، متوجه دری می‌شود که روی آن نوشته شده: اتاق ۹.',
   },
   {
     id: 'scene3_narrator',
     role: 'narrator',
-    text: 'مُدیرِ هُتِل قَبلاً به او هُشدار داده بود:',
+    text: 'مدیر هتل قبلاً به او هشدار داده بود:',
   },
   {
     id: 'scene3_manager',
     role: 'old_man',
-    text: 'هَر اُتاقی خواستی بِرو، فَقَط دَرِ شُماره‌یِ نُه رو باز نَکُن.',
+    text: 'هر اتاقی خواستی برو، فقط درِ شماره ۹ رو باز نکن.',
   },
   {
     id: 'scene4_narrator1',
     role: 'narrator',
-    text: 'صِدایِ زَنی اَز داخِل می‌گویَد:',
+    text: 'صدای زنی از داخل می‌گوید:',
   },
   {
     id: 'scene4_mother',
     role: 'woman',
-    text: 'نَوید... بِلاخَره بَرگَشتی.',
+    text: 'نوید... بالاخره برگشتی.',
   },
   {
     id: 'scene4_narrator2',
     role: 'narrator',
-    text: 'این دَقیقاً صِدایِ مادَرَش اَست؛ مادَری که پانزدَه سالِ پیش فوت کَرده.',
+    text: 'این دقیقاً صدای مادرش است؛ مادری که ۱۵ سال پیش فوت کرده.',
   },
   {
     id: 'scene5_narrator',
     role: 'narrator',
-    text: 'اَز زیرِ دَر، یک عَکسِ قَدیمی بیرون می‌خَزَد. عَکسِ کودَکیِ خودَش اَست؛ کِنارِ زَنی که نَبایَد زِنده باشَد.',
+    text: 'از زیر در، یک عکس قدیمی بیرون می‌خزد. عکس کودکی خودش است؛ کنار زنی که نباید زنده باشد.',
   },
   {
     id: 'scene6_narrator',
     role: 'narrator',
-    text: 'دَستگیره‌یِ دَر شُروع به چَرخیدَن می‌کُنَد...',
+    text: 'دستگیره در شروع به چرخیدن می‌کند...',
   },
   {
     id: 'scene7_narrator',
     role: 'narrator',
-    text: 'پایانِ قِسمَتِ اَوّل: مُخاطَب تَصمیم می‌گیرَد. نَوید بایَد چِه کار کُنَد؟ گُزینه‌یِ اِی: دَر را باز کُنَد. یا گُزینه‌یِ بی: عَکس را بَردارَد و اَز هُتِل فِرار کُنَد.',
+    text: 'پایان قسمت اول، مخاطب تصمیم می‌گیرد. نوید باید چه کار کند؟ گزینه A: در را باز کند. یا گزینه B: عکس را بردارد و از هتل فرار کند.',
   },
 ];
 
-async function generateClip(clip) {
-  const voiceConfig = VOICES[clip.role];
-  console.log(`🎙️ Generating ${clip.id}.mp3 [role: ${clip.role}, model: ${MODEL_ID}]...`);
+async function resolveVoicesFromAccount() {
+  const resolved = { ...DEFAULT_VOICES };
+  try {
+    const res = await fetch('https://api.elevenlabs.io/v1/voices', {
+      headers: { 'xi-api-key': API_KEY },
+    });
+    if (!res.ok) return resolved;
 
-  const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceConfig.id}`, {
+    const data = await res.json();
+    const voices = Array.isArray(data?.voices) ? data.voices : [];
+
+    // جستجوی صداهای مرتبط با فارسی یا چندزبانه در کتابخانه اکانت
+    const persianTagged = voices.filter((v) => {
+      const blob = JSON.stringify(v).toLowerCase();
+      return blob.includes('persian') || blob.includes('farsi') || blob.includes('iran');
+    });
+
+    if (persianTagged.length > 0 && !process.env.ELEVENLABS_NARRATOR_VOICE_ID) {
+      const maleMatch = persianTagged.find((v) => v?.labels?.gender === 'male');
+      const femaleMatch = persianTagged.find((v) => v?.labels?.gender === 'female');
+      if (maleMatch?.voice_id) resolved.narrator = maleMatch.voice_id;
+      if (femaleMatch?.voice_id) resolved.woman = femaleMatch.voice_id;
+      console.log('🔎 Found Persian-tagged voices in account library.');
+    }
+  } catch {
+    // در صورت عدم دسترسی یا خطای شبکه، از صداهای پیش‌فرض استفاده می‌شود
+  }
+  return resolved;
+}
+
+async function generateClip(clip, voiceMap) {
+  const voiceId = voiceMap[clip.role];
+  const settings = ROLE_SETTINGS[clip.role];
+  console.log(`🎙️ Generating ${clip.id}.mp3 [role: ${clip.role}, voice: ${voiceId}]...`);
+
+  const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
     method: 'POST',
     headers: {
       'xi-api-key': API_KEY,
@@ -100,7 +125,7 @@ async function generateClip(clip) {
     body: JSON.stringify({
       text: clip.text,
       model_id: MODEL_ID,
-      voice_settings: voiceConfig.settings,
+      voice_settings: settings,
     }),
   });
 
@@ -116,10 +141,11 @@ async function generateClip(clip) {
 }
 
 async function main() {
+  const voiceMap = await resolveVoicesFromAccount();
   for (const clip of CLIPS) {
-    await generateClip(clip);
+    await generateClip(clip, voiceMap);
   }
-  console.log('🎉 All Persian v3 voiceovers generated successfully!');
+  console.log('🎉 All voiceovers generated successfully!');
 }
 
 main().catch((err) => {

@@ -133,16 +133,16 @@ const Highlight: React.FC<{ children: React.ReactNode }> = ({ children }) => (
 /* صحنه ۱: نمای بیرونی هتل متروکه */
 const Scene1HotelExterior: React.FC = () => {
   const frame = useCurrentFrame();
-  const scale = interpolate(frame, [0, 210], [1.1, 1], {
+  const scale = interpolate(frame, [0, 270], [1.1, 1], {
     extrapolateRight: 'clamp',
   });
-  const navidX = interpolate(frame, [0, 210], [410, 505], {
+  const navidX = interpolate(frame, [0, 270], [410, 505], {
     extrapolateRight: 'clamp',
   });
   const walkBob = Math.sin(frame / 4) * 5;
   const cameraFlash =
-    frame >= 85 && frame <= 93
-      ? interpolate(frame, [85, 87, 93], [0, 0.75, 0])
+    frame >= 95 && frame <= 103
+      ? interpolate(frame, [95, 97, 103], [0, 0.75, 0])
       : 0;
 
   return (
@@ -272,7 +272,7 @@ const Scene1HotelExterior: React.FC = () => {
 /* صحنه ۲: راهروی متروکه و درِ اتاق ۹ */
 const Scene2CorridorDoor9: React.FC = () => {
   const frame = useCurrentFrame();
-  const zoom = interpolate(frame, [0, 165], [1, 1.18], {
+  const zoom = interpolate(frame, [0, 210], [1, 1.18], {
     easing: Easing.inOut(Easing.ease),
     extrapolateRight: 'clamp',
   });
@@ -347,17 +347,17 @@ const Scene2CorridorDoor9: React.FC = () => {
 /* صحنه ۳: فلاش‌بک هشدار مدیر هتل */
 const Scene3ManagerWarning: React.FC = () => {
   const frame = useCurrentFrame();
-  const scale = interpolate(frame, [0, 225], [1.06, 1], { extrapolateRight: 'clamp' });
-  const isManagerSpeaking = frame >= 75;
+  const scale = interpolate(frame, [0, 300], [1.06, 1], { extrapolateRight: 'clamp' });
+  const isManagerSpeaking = frame >= 105;
   const handShake = isManagerSpeaking ? Math.sin(frame / 2.5) * 4 : 0;
   const mouthOpen = isManagerSpeaking ? Math.abs(Math.sin(frame / 3)) * 10 : 0;
 
   return (
     <AbsoluteFill style={{ backgroundColor: '#0d1520', overflow: 'hidden' }}>
-      <Sequence from={0} durationInFrames={80}>
+      <Sequence from={0} durationInFrames={105}>
         <Audio src={staticFile('voice/otagh9/scene3_narrator.mp3')} />
       </Sequence>
-      <Sequence from={75} durationInFrames={150}>
+      <Sequence from={105} durationInFrames={195}>
         <Audio src={staticFile('voice/otagh9/scene3_manager.mp3')} />
       </Sequence>
 
@@ -430,40 +430,38 @@ const Scene3ManagerWarning: React.FC = () => {
   );
 };
 
-/* صحنه ۴: صدای مادر از پشت در (با افکت صوتی پشت در، اکو و کاهش حجم هنگام صحبت) */
+/* صحنه ۴: صدای مادر از پشت در (با فضای کافی برای اتمام کامل هر فایل صوتی) */
 const Scene4MotherVoice: React.FC = () => {
   const frame = useCurrentFrame();
-  const isMotherSpeaking = frame >= 65 && frame < 165;
+  const isMotherSpeaking = frame >= 95 && frame < 210;
   const waveOffset = (frame * 3.5) % 65;
-  const microTremor = frame >= 65 && frame < 190 ? Math.sin(frame * 1.8) * 3 : 0;
+  const microTremor = frame >= 95 && frame < 225 ? Math.sin(frame * 1.8) * 3 : 0;
 
-  // شبیه‌سازی صدای خفه‌شده پشت در با کاهش حجم لحظه‌ای و اکو ضعیف پشت سر
   const motherMainVolume = isMotherSpeaking
-    ? interpolate(Math.sin(frame * 0.9), [-1, 1], [0.55, 0.72])
+    ? interpolate(Math.sin(frame * 0.9), [-1, 1], [0.58, 0.75])
     : 0;
 
   return (
     <AbsoluteFill style={{ backgroundColor: '#090f18', overflow: 'hidden' }}>
       {/* بخش ۱: راوی */}
-      <Sequence from={0} durationInFrames={70}>
+      <Sequence from={0} durationInFrames={95}>
         <Audio src={staticFile('voice/otagh9/scene4_narrator1.mp3')} />
       </Sequence>
-      {/* بخش ۲: صدای مادر از پشت در (حجم کنترل‌شده + اکو کوتاه پشت در) */}
-      <Sequence from={65} durationInFrames={115}>
+      {/* بخش ۲: صدای مادر از پشت در (حجم کنترل‌شده + اکو کوتاه پشت در، بدون بریده شدن انتهای صدا) */}
+      <Sequence from={95} durationInFrames={115}>
         <Audio src={staticFile('voice/otagh9/scene4_mother.mp3')} volume={motherMainVolume} />
       </Sequence>
-      <Sequence from={70} durationInFrames={115}>
-        <Audio src={staticFile('voice/otagh9/scene4_mother.mp3')} volume={0.22} />
+      <Sequence from={100} durationInFrames={115}>
+        <Audio src={staticFile('voice/otagh9/scene4_mother.mp3')} volume={0.2} />
       </Sequence>
       {/* بخش ۳: ادامه توضیح راوی */}
-      <Sequence from={165} durationInFrames={135}>
+      <Sequence from={210} durationInFrames={180}>
         <Audio src={staticFile('voice/otagh9/scene4_narrator2.mp3')} />
       </Sequence>
 
       <svg viewBox="0 0 1080 1920" width="1080" height="1920">
         <rect width="1080" height="1920" fill="#090f18" />
 
-        {/* دیوار و در ضخیم اتاق ۹ سمت راست */}
         <rect x="850" y="0" width="230" height="1920" fill="#241814" />
         <rect x="836" y="0" width="14" height="1920" fill="#f7b731" opacity={isMotherSpeaking ? 0.9 : 0.55} />
         <rect x="760" y="0" width="80" height="1920" fill="#f7b731" opacity="0.08" />
@@ -506,13 +504,13 @@ const Scene4MotherVoice: React.FC = () => {
         ))}
       </svg>
       <FilmAtmosphere />
-      {frame < 65 && <Subtitle>صدای زنی از داخل می‌گوید:</Subtitle>}
+      {frame < 95 && <Subtitle>صدای زنی از داخل می‌گوید:</Subtitle>}
       {isMotherSpeaking && (
         <Subtitle speaker="صدای زن (از پشت در):">
           <Highlight>«نوید... بالاخره برگشتی.»</Highlight>
         </Subtitle>
       )}
-      {frame >= 165 && (
+      {frame >= 210 && (
         <Subtitle>
           این دقیقاً <Highlight>صدای مادرش</Highlight> است؛ مادری که ۱۵ سال پیش فوت کرده.
         </Subtitle>
@@ -524,11 +522,11 @@ const Scene4MotherVoice: React.FC = () => {
 /* صحنه ۵: عکس قدیمی از زیر در بیرون می‌خزد */
 const Scene5OldPhoto: React.FC = () => {
   const frame = useCurrentFrame();
-  const slideY = interpolate(frame, [0, 140], [-170, 155], {
+  const slideY = interpolate(frame, [0, 180], [-170, 155], {
     easing: Easing.out(Easing.cubic),
     extrapolateRight: 'clamp',
   });
-  const rotate = interpolate(frame, [0, 140], [-5, 6], {
+  const rotate = interpolate(frame, [0, 180], [-5, 6], {
     extrapolateRight: 'clamp',
   });
 
@@ -588,7 +586,7 @@ const Scene5OldPhoto: React.FC = () => {
 /* صحنه ۶: چرخش دستگیره برنجی */
 const Scene6DoorknobTurn: React.FC = () => {
   const frame = useCurrentFrame();
-  const angle = interpolate(frame, [8, 110], [0, -36], {
+  const angle = interpolate(frame, [10, 140], [0, -36], {
     easing: Easing.inOut(Easing.ease),
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
@@ -821,26 +819,26 @@ export const Otagh9: React.FC = () => {
         پرونده مرموز: <span style={{ color: '#ff5722' }}>اتاق ۹</span>
       </div>
 
-      {/* تایم‌لاین چندصدایی هماهنگ شده (مجموع ۵۰.۵ ثانیه = ۱۵۱۵ فریم) */}
-      <Sequence from={0} durationInFrames={210}>
+      {/* تایم‌لاین کامل با فضای تنفس کافی تا هیچ دیالوگی آخرش قطع نشود (مجموع ۶۶ ثانیه = ۱۹۸۰ فریم) */}
+      <Sequence from={0} durationInFrames={270}>
         <Scene1HotelExterior />
       </Sequence>
-      <Sequence from={210} durationInFrames={165}>
+      <Sequence from={270} durationInFrames={210}>
         <Scene2CorridorDoor9 />
       </Sequence>
-      <Sequence from={375} durationInFrames={225}>
+      <Sequence from={480} durationInFrames={300}>
         <Scene3ManagerWarning />
       </Sequence>
-      <Sequence from={600} durationInFrames={300}>
+      <Sequence from={780} durationInFrames={390}>
         <Scene4MotherVoice />
       </Sequence>
-      <Sequence from={900} durationInFrames={210}>
+      <Sequence from={1170} durationInFrames={270}>
         <Scene5OldPhoto />
       </Sequence>
-      <Sequence from={1110} durationInFrames={135}>
+      <Sequence from={1440} durationInFrames={180}>
         <Scene6DoorknobTurn />
       </Sequence>
-      <Sequence from={1245} durationInFrames={270}>
+      <Sequence from={1620} durationInFrames={360}>
         <Scene7ChoiceScreen />
       </Sequence>
     </AbsoluteFill>

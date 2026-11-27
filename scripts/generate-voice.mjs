@@ -11,7 +11,7 @@ const MODEL_ID = 'eleven_multilingual_v2';
 const OUTPUT_DIR = path.resolve('public/voice/otagh9');
 fs.mkdirSync(OUTPUT_DIR, { recursive: true });
 
-// کلمات کلیدی رایج اسامی فارسی در ElevenLabs
+// کلمات کلیدی فارسی و اسامی ایرانی برای شناسایی صداهای فارسی
 const PERSIAN_NAME_KEYWORDS = [
   'persian',
   'iran',
@@ -106,24 +106,11 @@ const FEMALE_HINTS = [
 
 const OLD_HINTS = ['old', 'elder', 'senior', 'grandfather', 'grandpa', 'mohsen', 'dariush', 'ebrahim'];
 
-// صداهای استاندارد داخلی ElevenLabs به عنوان پشتیبان نهایی در صورت عدم دسترسی API به صداهای فارسی
-const FALLBACK_VOICES = {
-  narrator: {
-    id: 'onwK4e9ZLuTAKqWW03F9',
-    settings: { stability: 0.65, similarity_boost: 0.78, style: 0.12, use_speaker_boost: true },
-  },
-  old_man: {
-    id: 'pqHfZKP75CvOlQylNhV4',
-    settings: { stability: 0.7, similarity_boost: 0.82, style: 0.25, use_speaker_boost: true },
-  },
-  woman: {
-    id: 'Xb7hH8MSUJpSbSDYk0k2',
-    settings: { stability: 0.55, similarity_boost: 0.8, style: 0.3, use_speaker_boost: true },
-  },
-  young_man: {
-    id: 'TX3LPaxmHKxFdv7VOQHJ',
-    settings: { stability: 0.58, similarity_boost: 0.78, style: 0.2, use_speaker_boost: true },
-  },
+const ROLE_SETTINGS = {
+  narrator: { stability: 0.65, similarity_boost: 0.78, style: 0.12, use_speaker_boost: true },
+  old_man: { stability: 0.7, similarity_boost: 0.82, style: 0.25, use_speaker_boost: true },
+  woman: { stability: 0.55, similarity_boost: 0.8, style: 0.3, use_speaker_boost: true },
+  young_man: { stability: 0.58, similarity_boost: 0.78, style: 0.2, use_speaker_boost: true },
 };
 
 // متن دقیق و کامل داستان «اتاق ۹»
@@ -187,18 +174,12 @@ function isPersianVoice(voice) {
   return PERSIAN_NAME_KEYWORDS.some((kw) => combined.includes(kw));
 }
 
-function isFreeApiAllowedVoice(voice) {
-  const category = String(voice?.category || '').toLowerCase();
-  // صداهای کتابخانه عمومی (high_quality / shared / library) در پلن رایگان روی API خطای 402 می‌دهند
-  return category !== 'high_quality' && category !== 'shared' && category !== 'library';
-}
-
-function pickBestVoice(candidates, predicate, fallbackId) {
+function pickBestVoice(candidates, predicate) {
   const filtered = candidates.filter(predicate);
-  return filtered[0] || candidates[0] || { voice_id: fallbackId, name: `fallback (${fallbackId})` };
+  return filtered[0] || candidates[0];
 }
 
-async function discoverVoices() {
+async function discoverPersianVoices() {
   const res = await fetch('https://api.elevenlabs.io/v1/voices', {
     headers: { 'xi-api-key': API_KEY },
   });
@@ -209,63 +190,41 @@ async function discoverVoices() {
 
   const data = await res.json();
   const allVoices = Array.isArray(data?.voices) ? data.voices : [];
+  const persianVoices = allVoices.filter(isPersianVoice);
 
-  console.log(`🔍 Total voices returned by /v1/voices: ${allVoices.length}`);
-
-  const persianAll = allVoices.filter(isPersianVoice);
-  console.log(
-    `🇮🇷 Persian-named/tagged voices found: ${
-      persianAll.map((v) => `${v.name} [${v.category || 'unknown'}: ${v.voice_id}]`).join(', ') || 'none'
-    }`
-  );
-
-  const usablePersian = persianAll.filter(isFreeApiAllowedVoice);
-  const pool = usablePersian.length > 0 ? usablePersian : allVoices.filter(isFreeApiAllowedVoice);
-
-  if (usablePersian.length === 0 && persianAll.length > 0) {
-    console.log(
-      '⚠️ Persian voices found in account are library/shared voices blocked by ElevenLabs API on free tier; testing free-tier API voices.'
-    );
+  if (persianVoices.length === 0) {
+    throw new Error('❌ هیچ صدای فارسی در دسترس پیدا نشد؛ تولید صدا متوقف شد.');
   }
 
-  const narratorVoice = pickBestVoice(
-    pool,
-    (v) => {
-      const s = `${v.name} ${JSON.stringify(v.labels || {})}`.toLowerCase();
-      return !FEMALE_HINTS.some((h) => s.includes(h));
-    },
-    FALLBACK_VOICES.narrator.id
+  console.log(
+    `🇮🇷 Persian voices found: ${persianVoices.map((v) => `${v.name} [${v.category || 'unknown'}: ${v.voice_id}]`).join(', ')}`
   );
 
-  const womanVoice = pickBestVoice(
-    pool,
-    (v) => {
-      const s = `${v.name} ${JSON.stringify(v.labels || {})}`.toLowerCase();
-      return FEMALE_HINTS.some((h) => s.includes(h));
-    },
-    FALLBACK_VOICES.woman.id
-  );
+  const narratorVoice = pickBestVoice(persianVoices, (v) => {
+    const s = `${v.name} ${JSON.stringify(v.labels || {})}`.toLowerCase();
+    return !FEMALE_HINTS.some((h) => s.includes(h));
+  });
 
-  const oldManVoice = pickBestVoice(
-    pool,
-    (v) => {
-      const s = `${v.name} ${JSON.stringify(v.labels || {})}`.toLowerCase();
-      return OLD_HINTS.some((h) => s.includes(h)) && !FEMALE_HINTS.some((h) => s.includes(h));
-    },
-    FALLBACK_VOICES.old_man.id
-  );
+  const womanVoice = pickBestVoice(persianVoices, (v) => {
+    const s = `${v.name} ${JSON.stringify(v.labels || {})}`.toLowerCase();
+    return FEMALE_HINTS.some((h) => s.includes(h));
+  });
+
+  const oldManVoice = pickBestVoice(persianVoices, (v) => {
+    const s = `${v.name} ${JSON.stringify(v.labels || {})}`.toLowerCase();
+    return OLD_HINTS.some((h) => s.includes(h)) && !FEMALE_HINTS.some((h) => s.includes(h));
+  });
 
   const youngManVoice = pickBestVoice(
-    pool,
-    (v) => v.voice_id !== narratorVoice.voice_id && v.voice_id !== oldManVoice.voice_id,
-    FALLBACK_VOICES.young_man.id
+    persianVoices,
+    (v) => v.voice_id !== narratorVoice.voice_id && v.voice_id !== oldManVoice.voice_id
   );
 
   return {
-    narrator: { voice: narratorVoice, settings: FALLBACK_VOICES.narrator.settings },
-    old_man: { voice: oldManVoice, settings: FALLBACK_VOICES.old_man.settings },
-    woman: { voice: womanVoice, settings: FALLBACK_VOICES.woman.settings },
-    young_man: { voice: youngManVoice, settings: FALLBACK_VOICES.young_man.settings },
+    narrator: { voice: narratorVoice, settings: ROLE_SETTINGS.narrator },
+    old_man: { voice: oldManVoice, settings: ROLE_SETTINGS.old_man },
+    woman: { voice: womanVoice, settings: ROLE_SETTINGS.woman },
+    young_man: { voice: youngManVoice, settings: ROLE_SETTINGS.young_man },
   };
 }
 
@@ -302,11 +261,11 @@ async function generateClip(clip, voiceMap) {
 }
 
 async function main() {
-  const voiceMap = await discoverVoices();
+  const voiceMap = await discoverPersianVoices();
   for (const clip of CLIPS) {
     await generateClip(clip, voiceMap);
   }
-  console.log('🎉 All voiceovers generated successfully!');
+  console.log('🎉 All Persian voiceovers generated successfully!');
 }
 
 main().catch((err) => {

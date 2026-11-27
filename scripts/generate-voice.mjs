@@ -84,14 +84,14 @@ const CLIPS = [
   },
 ];
 
-async function generateClip(clip: { id: string; role: keyof typeof VOICES; text: string }) {
+async function generateClip(clip) {
   const voiceConfig = VOICES[clip.role];
   console.log(`🎙️ Generating ${clip.id}.mp3 [role: ${clip.role}]...`);
 
   const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceConfig.id}`, {
     method: 'POST',
     headers: {
-      'xi-api-key': API_KEY!,
+      'xi-api-key': API_KEY,
       'Content-Type': 'application/json',
       Accept: 'audio/mpeg',
     },

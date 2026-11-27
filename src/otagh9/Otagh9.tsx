@@ -1,7 +1,9 @@
 import React from 'react';
 import {
   AbsoluteFill,
+  Audio,
   Sequence,
+  staticFile,
   useCurrentFrame,
   useVideoConfig,
   interpolate,
@@ -121,21 +123,21 @@ const Highlight: React.FC<{ children: React.ReactNode }> = ({ children }) => (
 /* صحنه ۱: نمای بیرونی هتل متروکه، حصار تخریب، فلاش دوربین نوید */
 const Scene1HotelExterior: React.FC = () => {
   const frame = useCurrentFrame();
-  const scale = interpolate(frame, [0, 150], [1.1, 1], {
+  const scale = interpolate(frame, [0, 210], [1.1, 1], {
     extrapolateRight: 'clamp',
   });
-  const navidX = interpolate(frame, [0, 150], [410, 505], {
+  const navidX = interpolate(frame, [0, 210], [410, 505], {
     extrapolateRight: 'clamp',
   });
   const walkBob = Math.sin(frame / 4) * 5;
-  // فلاش دوربین نوید در فریم ۶۵
   const cameraFlash =
-    frame >= 64 && frame <= 72
-      ? interpolate(frame, [64, 66, 72], [0, 0.75, 0])
+    frame >= 85 && frame <= 93
+      ? interpolate(frame, [85, 87, 93], [0, 0.75, 0])
       : 0;
 
   return (
     <AbsoluteFill style={{ backgroundColor: '#080e17', overflow: 'hidden' }}>
+      <Audio src={staticFile('voice/otagh9/scene1.mp3')} />
       <div style={{ width: '100%', height: '100%', transform: `scale(${scale})` }}>
         <svg viewBox="0 0 1080 1920" width="1080" height="1920">
           <defs>
@@ -176,10 +178,8 @@ const Scene1HotelExterior: React.FC = () => {
 
           {/* ساختمان اصلی هتل قدیمی با جزئیات معماری */}
           <rect x="190" y="440" width="700" height="1060" rx="6" fill="url(#hotelFacade)" />
-          {/* ستون‌های عمودی نما */}
           <rect x="215" y="440" width="24" height="1060" fill="#141d2b" />
           <rect x="841" y="440" width="24" height="1060" fill="#141d2b" />
-          {/* سقف شیروانی و قرنیز */}
           <polygon points="160,440 540,300 920,440" fill="#111926" />
           <rect x="175" y="435" width="730" height="18" fill="#27364a" />
 
@@ -197,20 +197,13 @@ const Scene1HotelExterior: React.FC = () => {
             GRAND HOTEL
           </text>
 
-          {/* پنجره‌های طبقات با شیشه‌های شکسته و نور مرموز */}
+          {/* پنجره‌های طبقات */}
           {[540, 740, 940].map((y, rowIdx) =>
             [285, 485, 685].map((x, colIdx) => {
               const isLit = rowIdx === 1 && colIdx === 2;
               return (
                 <g key={`${rowIdx}-${colIdx}`}>
-                  <rect
-                    x={x - 6}
-                    y={y - 6}
-                    width="122"
-                    height="148"
-                    rx="8"
-                    fill="#101824"
-                  />
+                  <rect x={x - 6} y={y - 6} width="122" height="148" rx="8" fill="#101824" />
                   <rect
                     x={x}
                     y={y}
@@ -220,10 +213,8 @@ const Scene1HotelExterior: React.FC = () => {
                     fill={isLit ? '#f5a623' : '#080d14'}
                     opacity={isLit ? 0.35 : 0.95}
                   />
-                  {/* قاب پنجره */}
                   <line x1={x + 55} y1={y} x2={x + 55} y2={y + 136} stroke="#1d293a" strokeWidth="5" />
                   <line x1={x} y1={y + 68} x2={x + 110} y2={y + 68} stroke="#1d293a" strokeWidth="5" />
-                  {/* تخته‌کوبی روی بعضی پنجره‌ها */}
                   {rowIdx === 2 && colIdx === 0 && (
                     <rect
                       x={x - 10}
@@ -248,7 +239,7 @@ const Scene1HotelExterior: React.FC = () => {
           <circle cx="395" cy="1290" r="95" fill="url(#lampGlow)" />
           <circle cx="395" cy="1290" r="10" fill="#ffd166" />
 
-          {/* زمین، پیاده‌رو و نوار خطر زرد-مشکی تخریب */}
+          {/* زمین و نوار خطر تخریب */}
           <rect x="0" y="1500" width="1080" height="420" fill="#070b12" />
           <rect x="80" y="1430" width="14" height="80" fill="#4b5563" />
           <rect x="330" y="1430" width="14" height="80" fill="#4b5563" />
@@ -257,20 +248,15 @@ const Scene1HotelExterior: React.FC = () => {
           <line x1="80" y1="1445" x2="340" y2="1445" stroke="#f7b731" strokeWidth="8" strokeDasharray="24 16" />
           <line x1="740" y1="1445" x2="990" y2="1445" stroke="#f7b731" strokeWidth="8" strokeDasharray="24 16" />
 
-          {/* شخصیت نوید با کوله، کت آجری و دوربین DSLR */}
+          {/* شخصیت نوید */}
           <g transform={`translate(${navidX}, ${1255 + walkBob})`}>
-            {/* پاها */}
             <rect x="24" y="185" width="18" height="65" rx="6" fill="#161d26" />
             <rect x="52" y="185" width="18" height="65" rx="6" fill="#1e2733" />
-            {/* کوله پشتی */}
             <rect x="-6" y="88" width="26" height="85" rx="10" fill="#2c3a4d" />
-            {/* بدن و کت آجری */}
             <path d="M12,78 Q46,60 80,78 L90,195 L4,195 Z" fill="#9c4a2f" />
             <path d="M36,75 L56,75 L46,145 Z" fill="#1f2733" />
-            {/* سر و موهای لایه‌ای */}
             <ellipse cx="46" cy="36" rx="25" ry="29" fill="#d9a077" />
             <path d="M20,34 C18,2 76,2 72,34 C65,20 30,20 20,34 Z" fill="#1b1615" />
-            {/* دوربین عکاسی روی سینه */}
             <rect x="34" y="108" width="38" height="26" rx="5" fill="#18202b" stroke="#475569" strokeWidth="2" />
             <circle cx="55" cy="121" r="10" fill="#0f172a" stroke="#94a3b8" strokeWidth="2" />
             <circle cx="55" cy="121" r="4" fill="#38bdf8" opacity="0.7" />
@@ -285,10 +271,10 @@ const Scene1HotelExterior: React.FC = () => {
   );
 };
 
-/* صحنه ۲: راهروی متروکه، کاغذدیواری پوسته‌شده و درِ اتاق ۹ */
+/* صحنه ۲: راهروی متروکه و درِ اتاق ۹ */
 const Scene2CorridorDoor9: React.FC = () => {
   const frame = useCurrentFrame();
-  const zoom = interpolate(frame, [0, 150], [1, 1.18], {
+  const zoom = interpolate(frame, [0, 165], [1, 1.18], {
     easing: Easing.inOut(Easing.ease),
     extrapolateRight: 'clamp',
   });
@@ -296,6 +282,7 @@ const Scene2CorridorDoor9: React.FC = () => {
 
   return (
     <AbsoluteFill style={{ backgroundColor: '#09101a', overflow: 'hidden' }}>
+      <Audio src={staticFile('voice/otagh9/scene2.mp3')} />
       <div style={{ width: '100%', height: '100%', transform: `scale(${zoom})` }}>
         <svg viewBox="0 0 1080 1920" width="1080" height="1920">
           <defs>
@@ -312,36 +299,29 @@ const Scene2CorridorDoor9: React.FC = () => {
 
           <rect width="1080" height="1920" fill="url(#corridorWall2)" />
 
-          {/* دیوارهای پرسپکتیو چپ و راست با خطوط عمودی کاغذدیواری */}
           <polygon points="0,0 280,350 280,1480 0,1920" fill="#0f1a28" />
           <polygon points="1080,0 800,350 800,1480 1080,1920" fill="#0f1a28" />
           <line x1="120" y1="150" x2="120" y2="1730" stroke="#18283d" strokeWidth="4" />
           <line x1="960" y1="150" x2="960" y2="1730" stroke="#18283d" strokeWidth="4" />
 
-          {/* لوستر سقفی قدیمی و خاموش */}
           <line x1="540" y1="0" x2="540" y2="190" stroke="#263345" strokeWidth="6" />
           <path d="M470,220 Q540,170 610,220 Z" fill="#1e293b" />
           <circle cx="540" cy="226" r="14" fill="#f5a623" opacity="0.25" />
 
-          {/* چارچوب برجسته در اتاق ۹ */}
           <rect x="310" y="395" width="460" height="1085" rx="10" fill="#160f0c" />
           <rect x="330" y="415" width="420" height="1050" rx="6" fill="url(#door9Wood)" stroke="#4a342b" strokeWidth="8" />
 
-          {/* قاب‌بندی‌های کلاسیک روی در */}
           <rect x="375" y="475" width="330" height="360" rx="4" fill="none" stroke="#1a110e" strokeWidth="8" />
           <rect x="383" y="483" width="314" height="344" rx="2" fill="none" stroke="#3d2b24" strokeWidth="3" />
           <rect x="375" y="900" width="330" height="480" rx="4" fill="none" stroke="#1a110e" strokeWidth="8" />
           <rect x="383" y="908" width="314" height="464" rx="2" fill="none" stroke="#3d2b24" strokeWidth="3" />
 
-          {/* دستگیره کوچک در نما */}
           <circle cx="695" cy="960" r="16" fill="#c7923e" />
           <rect x="655" y="954" width="42" height="12" rx="6" fill="#e0a94f" />
 
-          {/* نور طلایی مرموز که از شکاف زیر در بیرون زده */}
           <polygon points="330,1465 750,1465 920,1780 160,1780" fill="#f5a623" opacity={glowPulse} />
           <rect x="330" y="1461" width="420" height="7" fill="#ffd166" opacity="0.85" />
 
-          {/* پلاک فلزی کهنه با شماره ۹ */}
           <rect x="472" y="585" width="136" height="84" rx="12" fill="#1a120b" opacity="0.5" />
           <rect x="476" y="580" width="128" height="80" rx="10" fill="#c7923e" stroke="#f7d794" strokeWidth="3" />
           <circle cx="492" cy="620" r="4" fill="#5c4014" />
@@ -366,14 +346,15 @@ const Scene2CorridorDoor9: React.FC = () => {
   );
 };
 
-/* صحنه ۳: فلاش‌بک هشدار مدیر هتل با کلیدها و قاب عتیقه */
+/* صحنه ۳: فلاش‌بک هشدار مدیر هتل */
 const Scene3ManagerWarning: React.FC = () => {
   const frame = useCurrentFrame();
-  const scale = interpolate(frame, [0, 165], [1.06, 1], { extrapolateRight: 'clamp' });
+  const scale = interpolate(frame, [0, 210], [1.06, 1], { extrapolateRight: 'clamp' });
   const handShake = Math.sin(frame / 3) * 3;
 
   return (
     <AbsoluteFill style={{ backgroundColor: '#0d1520', overflow: 'hidden' }}>
+      <Audio src={staticFile('voice/otagh9/scene3.mp3')} />
       <div style={{ width: '100%', height: '100%', transform: `scale(${scale})` }}>
         <svg viewBox="0 0 1080 1920" width="1080" height="1920">
           <defs>
@@ -385,7 +366,6 @@ const Scene3ManagerWarning: React.FC = () => {
           <rect width="1080" height="1920" fill="#0b121c" />
           <rect width="1080" height="1920" fill="url(#lobbyLamp)" />
 
-          {/* قفسه کلیدهای قدیمی هتل در پس‌زمینه */}
           <rect x="120" y="340" width="240" height="360" rx="8" fill="#151f2e" stroke="#26354a" strokeWidth="4" />
           {[400, 480, 560, 640].map((ky, i) => (
             <g key={i}>
@@ -395,19 +375,13 @@ const Scene3ManagerWarning: React.FC = () => {
             </g>
           ))}
 
-          {/* مدیر پیر هتل با جزئیات چهره، چین‌وچروک، عینک و جلیقه */}
           <g transform="translate(260, 440)">
-            {/* سایه و موهای جوگندمی */}
             <path d="M85,215 C75,55 475,55 465,215 C485,255 470,330 440,350 L110,350 C80,330 65,255 85,215 Z" fill="#64748b" />
-            {/* گوش‌ها */}
             <ellipse cx="115" cy="305" rx="18" ry="32" fill="#c4906c" />
             <ellipse cx="435" cy="305" rx="18" ry="32" fill="#c4906c" />
-            {/* صورت */}
             <path d="M120,185 L430,185 L412,425 C395,505 155,505 138,425 Z" fill="#d4a381" />
-            {/* خطوط پیشانی */}
             <path d="M195,215 Q275,205 355,215" stroke="#b07d5b" strokeWidth="4" fill="none" />
             <path d="M210,232 Q275,224 340,232" stroke="#b07d5b" strokeWidth="3" fill="none" />
-            {/* چشمان نگران و عینک گرد */}
             <circle cx="205" cy="295" r="25" fill="#ffffff" />
             <circle cx="205" cy="295" r="12" fill="#1e293b" />
             <circle cx="209" cy="291" r="4" fill="#ffffff" />
@@ -418,23 +392,18 @@ const Scene3ManagerWarning: React.FC = () => {
             <circle cx="345" cy="295" r="42" fill="none" stroke="#94a3b8" strokeWidth="5" />
             <line x1="247" y1="295" x2="303" y2="295" stroke="#94a3b8" strokeWidth="5" />
 
-            {/* ابروهای اخمو */}
             <path d="M160,248 Q205,268 242,244" stroke="#475569" strokeWidth="11" fill="none" strokeLinecap="round" />
             <path d="M308,244 Q345,268 390,248" stroke="#475569" strokeWidth="11" fill="none" strokeLinecap="round" />
 
-            {/* بینی و سبیل پرپشت جوگندمی */}
             <path d="M275,295 L263,355 L287,355" fill="none" stroke="#b07d5b" strokeWidth="5" strokeLinecap="round" />
             <path d="M195,382 Q275,352 355,382 Q335,412 275,398 Q215,412 195,382 Z" fill="#94a3b8" />
 
-            {/* کت‌وشلوار رسمی کلاسیک */}
             <path d="M30,565 Q275,490 520,565 L560,1080 L-10,1080 Z" fill="#1e293b" />
             <polygon points="215,525 335,525 275,730" fill="#f1f5f9" />
             <polygon points="258,540 292,540 304,720 246,720" fill="#991b1b" />
-            {/* یقه کت */}
             <polygon points="215,525 165,670 255,730" fill="#0f172a" />
             <polygon points="335,525 385,670 295,730" fill="#0f172a" />
 
-            {/* دست بالا آمده برای هشدار */}
             <g transform={`translate(${430 + handShake}, 610)`}>
               <rect x="0" y="60" width="56" height="110" rx="24" fill="#d4a381" />
               <rect x="18" y="0" width="18" height="75" rx="9" fill="#d4a381" />
@@ -450,34 +419,29 @@ const Scene3ManagerWarning: React.FC = () => {
   );
 };
 
-/* صحنه ۴: صدای مادر از پشت در، بهت نوید و موج صوتی طلایی */
+/* صحنه ۴: صدای مادر از پشت در */
 const Scene4MotherVoice: React.FC = () => {
   const frame = useCurrentFrame();
   const waveOffset = (frame * 3.5) % 65;
-  const microTremor = frame > 25 && frame < 95 ? Math.sin(frame * 1.8) * 3 : 0;
+  const microTremor = frame > 25 && frame < 140 ? Math.sin(frame * 1.8) * 3 : 0;
 
   return (
     <AbsoluteFill style={{ backgroundColor: '#090f18', overflow: 'hidden' }}>
+      <Audio src={staticFile('voice/otagh9/scene4.mp3')} />
       <svg viewBox="0 0 1080 1920" width="1080" height="1920">
         <rect width="1080" height="1920" fill="#090f18" />
 
-        {/* دیوار و لبه در اتاق ۹ با هاله نور گرم */}
         <rect x="850" y="0" width="230" height="1920" fill="#241814" />
         <rect x="836" y="0" width="14" height="1920" fill="#f7b731" opacity="0.65" />
         <rect x="760" y="0" width="80" height="1920" fill="#f7b731" opacity="0.08" />
 
-        {/* کلوزآپ چهره نوید در شوک مطلق */}
         <g transform={`translate(${145 + microTremor}, 420)`}>
-          {/* موهای تیره لایه‌ای با هایلایت */}
           <path d="M85,215 C75,45 465,45 455,215 C480,255 465,340 435,360 L105,360 C75,340 60,255 85,215 Z" fill="#181312" />
           <path d="M135,120 Q270,85 405,135" stroke="#2d2422" strokeWidth="14" fill="none" strokeLinecap="round" />
-          {/* گوش */}
           <ellipse cx="110" cy="305" rx="20" ry="34" fill="#c78e65" />
-          {/* صورت با سایه‌روشن گرم سمت راست */}
           <path d="M115,190 L420,190 L402,425 C385,505 145,505 128,425 Z" fill="#d9a077" />
           <path d="M360,190 L420,190 L402,425 L355,455 Z" fill="#e6b38c" opacity="0.55" />
 
-          {/* چشمان درشت بهت‌زده با مردمک لرزان */}
           <circle cx="205" cy="295" r="30" fill="#ffffff" />
           <circle cx="212" cy="295" r="13" fill="#24160e" />
           <circle cx="216" cy="290" r="4.5" fill="#ffffff" />
@@ -486,21 +450,16 @@ const Scene4MotherVoice: React.FC = () => {
           <circle cx="342" cy="295" r="13" fill="#24160e" />
           <circle cx="346" cy="290" r="4.5" fill="#ffffff" />
 
-          {/* ابروهای بالا رفته */}
           <path d="M162,242 Q205,216 242,242" stroke="#181312" strokeWidth="11" fill="none" strokeLinecap="round" />
           <path d="M298,242 Q335,216 378,242" stroke="#181312" strokeWidth="11" fill="none" strokeLinecap="round" />
 
-          {/* دهان نیمه‌باز از بهت */}
           <ellipse cx="270" cy="415" rx="22" ry="14" fill="#7a3b2e" />
 
-          {/* یقه و کت قهوه‌ای آجری + بند دوربین */}
           <path d="M30,565 Q270,490 510,565 L550,1080 L-10,1080 Z" fill="#9c4a2f" />
           <polygon points="210,520 330,520 270,710" fill="#1e2631" />
-          {/* بند دوربین روی شانه */}
           <polygon points="120,540 165,530 240,1080 185,1080" fill="#141921" />
         </g>
 
-        {/* امواج صوتی طلایی که از شکاف در به گوش نوید می‌رسند */}
         {[0, 1, 2, 3].map((i) => (
           <path
             key={i}
@@ -521,45 +480,38 @@ const Scene4MotherVoice: React.FC = () => {
   );
 };
 
-/* صحنه ۵: عکس قدیمی از زیر در بیرون می‌خزد (دید از بالا با جزئیات چهره مادر و کودک) */
+/* صحنه ۵: عکس قدیمی از زیر در بیرون می‌خزد */
 const Scene5OldPhoto: React.FC = () => {
   const frame = useCurrentFrame();
-  const slideY = interpolate(frame, [0, 115], [-170, 155], {
+  const slideY = interpolate(frame, [0, 140], [-170, 155], {
     easing: Easing.out(Easing.cubic),
     extrapolateRight: 'clamp',
   });
-  const rotate = interpolate(frame, [0, 115], [-5, 6], {
+  const rotate = interpolate(frame, [0, 140], [-5, 6], {
     extrapolateRight: 'clamp',
   });
 
   return (
     <AbsoluteFill style={{ backgroundColor: '#101822', overflow: 'hidden' }}>
+      <Audio src={staticFile('voice/otagh9/scene5.mp3')} />
       <svg viewBox="0 0 1080 1920" width="1080" height="1920">
         <rect width="1080" height="1920" fill="#101822" />
 
-        {/* تخته‌های کف چوبی راهرو */}
         {[880, 1120, 1360, 1600].map((ly, idx) => (
           <line key={idx} x1="0" y1={ly} x2="1080" y2={ly} stroke="#070b10" strokeWidth="6" />
         ))}
         <line x1="360" y1="680" x2="360" y2="1120" stroke="#070b10" strokeWidth="5" />
         <line x1="720" y1="1120" x2="720" y2="1600" stroke="#070b10" strokeWidth="5" />
 
-        {/* مخروط نور طلایی شدید از زیر در */}
         <polygon points="80,670 1000,670 1080,1360 0,1360" fill="#f5a623" opacity="0.36" />
 
-        {/* عکس چاپ‌شده قدیمی که از زیر در بیرون می‌لغزد */}
         <g transform={`translate(340, ${640 + slideY}) rotate(${rotate})`}>
-          {/* سایه عکس روی زمین */}
           <rect x="12" y="16" width="400" height="480" rx="8" fill="#000000" opacity="0.45" />
-          {/* کاغذ قدیمی لبه‌زرد */}
           <rect x="0" y="0" width="400" height="480" rx="8" fill="#ebe0c9" stroke="#c4ae86" strokeWidth="8" />
-          {/* کادر تصویر سپیا */}
           <rect x="28" y="28" width="344" height="360" fill="#826f5b" />
           <rect x="28" y="28" width="344" height="180" fill="#96816b" opacity="0.5" />
 
-          {/* تصویر مادر در عکس قدیمی */}
           <g transform="translate(85, 85)">
-            {/* موها و روسری/شال قدیمی */}
             <path d="M20,75 C15,10 125,10 120,75 L130,175 L10,175 Z" fill="#3a2e23" />
             <ellipse cx="70" cy="68" rx="34" ry="40" fill="#cbb59d" />
             <circle cx="58" cy="64" r="4.5" fill="#2b2118" />
@@ -568,7 +520,6 @@ const Scene5OldPhoto: React.FC = () => {
             <path d="M15,135 Q70,115 125,135 L140,303 L0,303 Z" fill="#4d3d2f" />
           </g>
 
-          {/* تصویر نوید در کودکی کنار مادر */}
           <g transform="translate(215, 145)">
             <ellipse cx="52" cy="52" rx="27" ry="31" fill="#cbb59d" />
             <path d="M25,46 C25,15 80,15 80,46 Z" fill="#2e241b" />
@@ -578,11 +529,9 @@ const Scene5OldPhoto: React.FC = () => {
             <path d="M12,102 Q52,88 92,102 L102,243 L2,243 Z" fill="#634f3d" />
           </g>
 
-          {/* لکه کهنگی گوشه عکس */}
           <circle cx="345" cy="55" r="22" fill="#b89f78" opacity="0.4" />
         </g>
 
-        {/* لبه پایینی در چوبی که عکس از زیر آن بیرون می‌آید */}
         <rect x="0" y="0" width="1080" height="670" fill="#1d1310" />
         <rect x="0" y="648" width="1080" height="22" fill="#3b2821" />
         <rect x="0" y="667" width="1080" height="6" fill="#ffd166" opacity="0.7" />
@@ -595,7 +544,7 @@ const Scene5OldPhoto: React.FC = () => {
   );
 };
 
-/* صحنه ۶: چرخش دستگیره برنجی با انعکاس نور و لرزش تعلیق */
+/* صحنه ۶: چرخش دستگیره برنجی */
 const Scene6DoorknobTurn: React.FC = () => {
   const frame = useCurrentFrame();
   const angle = interpolate(frame, [8, 110], [0, -36], {
@@ -607,6 +556,7 @@ const Scene6DoorknobTurn: React.FC = () => {
 
   return (
     <AbsoluteFill style={{ backgroundColor: '#18100d', overflow: 'hidden' }}>
+      <Audio src={staticFile('voice/otagh9/scene6.mp3')} />
       <svg viewBox="0 0 1080 1920" width="1080" height="1920">
         <defs>
           <linearGradient id="brassPlate" x1="0" y1="0" x2="1" y2="1">
@@ -621,14 +571,11 @@ const Scene6DoorknobTurn: React.FC = () => {
         </defs>
 
         <rect width="1080" height="1920" fill="#18100d" />
-        {/* بافت چوب عمودی در */}
         <line x1="210" y1="0" x2="210" y2="1920" stroke="#0f0907" strokeWidth="14" />
         <line x1="870" y1="0" x2="870" y2="1920" stroke="#0f0907" strokeWidth="14" />
 
-        {/* سایه صفحه برنجی روی چوب */}
         <rect x="582" y="752" width="168" height="490" rx="84" fill="#090504" opacity="0.65" />
 
-        {/* صفحه قفل برنجی */}
         <rect
           x="566"
           y="736"
@@ -639,17 +586,14 @@ const Scene6DoorknobTurn: React.FC = () => {
           stroke="#4f350f"
           strokeWidth="8"
         />
-        {/* پیچ‌های صفحه قفل */}
         <circle cx="650" cy="785" r="10" fill="#4f350f" />
         <circle cx="650" cy="1175" r="10" fill="#4f350f" />
 
-        {/* سوراخ کلید با پرتو نور طلایی */}
         <circle cx="650" cy="1095" r="24" fill="#1a1108" />
         <polygon points="636,1095 664,1095 676,1160 624,1160" fill="#1a1108" />
         <circle cx="650" cy="1095" r="18" fill="#f7b731" opacity={keyholeGlow} />
         <polygon points="639,1095 661,1095 671,1155 629,1155" fill="#f7b731" opacity={keyholeGlow} />
 
-        {/* سایه دستگیره در حال چرخش */}
         <g transform={`rotate(${angle}, 650, 920)`}>
           <rect x="345" y="902" width="330" height="68" rx="34" fill="#090504" opacity="0.5" />
           <rect x="335" y="886" width="335" height="68" rx="34" fill="url(#brassHandle)" />
@@ -684,6 +628,7 @@ const Scene7ChoiceScreen: React.FC = () => {
         justifyContent: 'center',
       }}
     >
+      <Audio src={staticFile('voice/otagh9/scene7.mp3')} />
       <FilmAtmosphere />
       <div style={{ textAlign: 'center', marginBottom: 56, zIndex: 30 }}>
         <div
@@ -836,26 +781,26 @@ export const Otagh9: React.FC = () => {
         پرونده مرموز: <span style={{ color: '#ff5722' }}>اتاق ۹</span>
       </div>
 
-      {/* تایم‌لاین صحنه‌ها (۳۰ فریم بر ثانیه - مجموع ۳۶ ثانیه = ۱۰۸۰ فریم) */}
-      <Sequence from={0} durationInFrames={150}>
+      {/* تایم‌لاین صحنه‌ها هماهنگ با زمان نریشن فارسی (۳۰ فریم بر ثانیه - مجموع ۴۹ ثانیه = ۱۴۷۰ فریم) */}
+      <Sequence from={0} durationInFrames={210}>
         <Scene1HotelExterior />
       </Sequence>
-      <Sequence from={150} durationInFrames={150}>
+      <Sequence from={210} durationInFrames={165}>
         <Scene2CorridorDoor9 />
       </Sequence>
-      <Sequence from={300} durationInFrames={165}>
+      <Sequence from={375} durationInFrames={210}>
         <Scene3ManagerWarning />
       </Sequence>
-      <Sequence from={465} durationInFrames={180}>
+      <Sequence from={585} durationInFrames={270}>
         <Scene4MotherVoice />
       </Sequence>
-      <Sequence from={645} durationInFrames={165}>
+      <Sequence from={855} durationInFrames={210}>
         <Scene5OldPhoto />
       </Sequence>
-      <Sequence from={810} durationInFrames={120}>
+      <Sequence from={1065} durationInFrames={135}>
         <Scene6DoorknobTurn />
       </Sequence>
-      <Sequence from={930} durationInFrames={150}>
+      <Sequence from={1200} durationInFrames={270}>
         <Scene7ChoiceScreen />
       </Sequence>
     </AbsoluteFill>

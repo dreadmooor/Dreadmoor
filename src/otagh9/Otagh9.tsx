@@ -344,7 +344,7 @@ const Scene2CorridorDoor9: React.FC = () => {
   );
 };
 
-/* صحنه ۳: فلاش‌بک هشدار مدیر هتل (با دو صدا: راوی + مدیر پیر هتل) */
+/* صحنه ۳: فلاش‌بک هشدار مدیر هتل */
 const Scene3ManagerWarning: React.FC = () => {
   const frame = useCurrentFrame();
   const scale = interpolate(frame, [0, 225], [1.06, 1], { extrapolateRight: 'clamp' });
@@ -354,11 +354,9 @@ const Scene3ManagerWarning: React.FC = () => {
 
   return (
     <AbsoluteFill style={{ backgroundColor: '#0d1520', overflow: 'hidden' }}>
-      {/* صدای راوی در ابتدا */}
       <Sequence from={0} durationInFrames={80}>
         <Audio src={staticFile('voice/otagh9/scene3_narrator.mp3')} />
       </Sequence>
-      {/* صدای مدیر پیر هتل از فریم ۷۵ */}
       <Sequence from={75} durationInFrames={150}>
         <Audio src={staticFile('voice/otagh9/scene3_manager.mp3')} />
       </Sequence>
@@ -404,7 +402,6 @@ const Scene3ManagerWarning: React.FC = () => {
             <path d="M308,244 Q345,268 390,248" stroke="#475569" strokeWidth="11" fill="none" strokeLinecap="round" />
 
             <path d="M275,295 L263,355 L287,355" fill="none" stroke="#b07d5b" strokeWidth="5" strokeLinecap="round" />
-            {/* دهان متحرک هنگام صحبت کردن مدیر هتل */}
             <ellipse cx="275" cy="402" rx="18" ry={3 + mouthOpen} fill="#5c2b21" />
             <path d="M195,382 Q275,352 355,382 Q335,412 275,398 Q215,412 195,382 Z" fill="#94a3b8" />
 
@@ -433,12 +430,17 @@ const Scene3ManagerWarning: React.FC = () => {
   );
 };
 
-/* صحنه ۴: صدای مادر از پشت در (راوی + صدای زنانه مادر + راوی) */
+/* صحنه ۴: صدای مادر از پشت در (با افکت صوتی پشت در، اکو و کاهش حجم هنگام صحبت) */
 const Scene4MotherVoice: React.FC = () => {
   const frame = useCurrentFrame();
   const isMotherSpeaking = frame >= 65 && frame < 165;
   const waveOffset = (frame * 3.5) % 65;
   const microTremor = frame >= 65 && frame < 190 ? Math.sin(frame * 1.8) * 3 : 0;
+
+  // شبیه‌سازی صدای خفه‌شده پشت در با کاهش حجم لحظه‌ای و اکو ضعیف پشت سر
+  const motherMainVolume = isMotherSpeaking
+    ? interpolate(Math.sin(frame * 0.9), [-1, 1], [0.55, 0.72])
+    : 0;
 
   return (
     <AbsoluteFill style={{ backgroundColor: '#090f18', overflow: 'hidden' }}>
@@ -446,9 +448,12 @@ const Scene4MotherVoice: React.FC = () => {
       <Sequence from={0} durationInFrames={70}>
         <Audio src={staticFile('voice/otagh9/scene4_narrator1.mp3')} />
       </Sequence>
-      {/* بخش ۲: صدای مادر نوید */}
-      <Sequence from={65} durationInFrames={105}>
-        <Audio src={staticFile('voice/otagh9/scene4_mother.mp3')} />
+      {/* بخش ۲: صدای مادر از پشت در (حجم کنترل‌شده + اکو کوتاه پشت در) */}
+      <Sequence from={65} durationInFrames={115}>
+        <Audio src={staticFile('voice/otagh9/scene4_mother.mp3')} volume={motherMainVolume} />
+      </Sequence>
+      <Sequence from={70} durationInFrames={115}>
+        <Audio src={staticFile('voice/otagh9/scene4_mother.mp3')} volume={0.22} />
       </Sequence>
       {/* بخش ۳: ادامه توضیح راوی */}
       <Sequence from={165} durationInFrames={135}>
@@ -458,6 +463,7 @@ const Scene4MotherVoice: React.FC = () => {
       <svg viewBox="0 0 1080 1920" width="1080" height="1920">
         <rect width="1080" height="1920" fill="#090f18" />
 
+        {/* دیوار و در ضخیم اتاق ۹ سمت راست */}
         <rect x="850" y="0" width="230" height="1920" fill="#241814" />
         <rect x="836" y="0" width="14" height="1920" fill="#f7b731" opacity={isMotherSpeaking ? 0.9 : 0.55} />
         <rect x="760" y="0" width="80" height="1920" fill="#f7b731" opacity="0.08" />
@@ -487,7 +493,6 @@ const Scene4MotherVoice: React.FC = () => {
           <polygon points="120,540 165,530 240,1080 185,1080" fill="#141921" />
         </g>
 
-        {/* امواج صوتی هنگام صحبت مادر پررنگ‌تر می‌شوند */}
         {[0, 1, 2, 3].map((i) => (
           <path
             key={i}
@@ -503,7 +508,7 @@ const Scene4MotherVoice: React.FC = () => {
       <FilmAtmosphere />
       {frame < 65 && <Subtitle>صدای زنی از داخل می‌گوید:</Subtitle>}
       {isMotherSpeaking && (
-        <Subtitle speaker="صدای زن (پشت در):">
+        <Subtitle speaker="صدای زن (از پشت در):">
           <Highlight>«نوید... بالاخره برگشتی.»</Highlight>
         </Subtitle>
       )}

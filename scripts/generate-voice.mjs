@@ -11,39 +11,120 @@ const MODEL_ID = 'eleven_multilingual_v2';
 const OUTPUT_DIR = path.resolve('public/voice/otagh9');
 fs.mkdirSync(OUTPUT_DIR, { recursive: true });
 
-// صداهای استاندارد داخلی ElevenLabs (مجاز روی پلن رایگان از طریق API)
-const FREE_VOICES = {
+// کلمات کلیدی رایج اسامی فارسی در ElevenLabs
+const PERSIAN_NAME_KEYWORDS = [
+  'persian',
+  'iran',
+  'farsi',
+  'meisam',
+  'mohsen',
+  'leili',
+  'amin',
+  'amir',
+  'ali',
+  'reza',
+  'hossein',
+  'sara',
+  'nima',
+  'kian',
+  'parisa',
+  'nazanin',
+  'maryam',
+  'mahdi',
+  'behzad',
+  'farhad',
+  'hamed',
+  'omid',
+  'pouya',
+  'sina',
+  'soheil',
+  'soroush',
+  'tarane',
+  'taraneh',
+  'yasamin',
+  'zahra',
+  'arash',
+  'arman',
+  'babak',
+  'dariush',
+  'ebrahim',
+  'esmail',
+  'fatemeh',
+  'ghazal',
+  'hassan',
+  'iman',
+  'javad',
+  'kamran',
+  'karim',
+  'kaveh',
+  'kiarash',
+  'mehrdad',
+  'milad',
+  'mohammad',
+  'morteza',
+  'navid',
+  'neda',
+  'nikoo',
+  'parsa',
+  'payam',
+  'pedram',
+  'ramin',
+  'roham',
+  'saeed',
+  'sam',
+  'saman',
+  'sasan',
+  'sepideh',
+  'shahin',
+  'shahram',
+  'shayan',
+  'siavash',
+  'vahid',
+  'yaser',
+];
+
+const FEMALE_HINTS = [
+  'leili',
+  'sara',
+  'parisa',
+  'nazanin',
+  'maryam',
+  'tarane',
+  'taraneh',
+  'yasamin',
+  'zahra',
+  'fatemeh',
+  'ghazal',
+  'neda',
+  'nikoo',
+  'sepideh',
+  'female',
+  'woman',
+  'girl',
+  'lady',
+];
+
+const OLD_HINTS = ['old', 'elder', 'senior', 'grandfather', 'grandpa', 'mohsen', 'dariush', 'ebrahim'];
+
+// صداهای استاندارد داخلی ElevenLabs به عنوان پشتیبان نهایی در صورت عدم دسترسی API به صداهای فارسی
+const FALLBACK_VOICES = {
   narrator: {
-    name: 'Daniel (Free API)',
     id: 'onwK4e9ZLuTAKqWW03F9',
     settings: { stability: 0.65, similarity_boost: 0.78, style: 0.12, use_speaker_boost: true },
   },
   old_man: {
-    name: 'Bill (Free API)',
     id: 'pqHfZKP75CvOlQylNhV4',
     settings: { stability: 0.7, similarity_boost: 0.82, style: 0.25, use_speaker_boost: true },
   },
   woman: {
-    name: 'Alice (Free API)',
     id: 'Xb7hH8MSUJpSbSDYk0k2',
     settings: { stability: 0.55, similarity_boost: 0.8, style: 0.3, use_speaker_boost: true },
   },
   young_man: {
-    name: 'Liam (Free API)',
     id: 'TX3LPaxmHKxFdv7VOQHJ',
     settings: { stability: 0.58, similarity_boost: 0.78, style: 0.2, use_speaker_boost: true },
   },
 };
-
-// شناسه صداهای اختصاصی درخواستی (در صورت فعال بودن پلن پولی روی اکانت، از طریق ENV یا پرچم --library قابل استفاده‌اند)
-const LIBRARY_VOICES = {
-  narrator: { name: 'Meisam', id: process.env.ELEVENLABS_NARRATOR_VOICE_ID || 'btWlswzMAoBbSI0PWhbz' },
-  old_man: { name: 'Mohsen', id: process.env.ELEVENLABS_OLD_MAN_VOICE_ID || 'rexsZJO2OhnY5Ihuqj89' },
-  woman: { name: 'Leili', id: process.env.ELEVENLABS_WOMAN_VOICE_ID || 'erDXAXYfyESLe4hXMyU3' },
-  young_man: { name: 'Amin', id: process.env.ELEVENLABS_YOUNG_MAN_VOICE_ID || 'fvCP6Z9Dzulf2E6NsM8a' },
-};
-
-const USE_LIBRARY = process.argv.includes('--library') || process.env.ELEVENLABS_USE_LIBRARY === '1';
 
 // متن دقیق و کامل داستان «اتاق ۹»
 const CLIPS = [
@@ -99,13 +180,101 @@ const CLIPS = [
   },
 ];
 
-async function generateClip(clip) {
-  const baseVoice = FREE_VOICES[clip.role];
-  const libVoice = LIBRARY_VOICES[clip.role];
-  const voiceId = USE_LIBRARY ? libVoice.id : baseVoice.id;
-  const voiceLabel = USE_LIBRARY ? `${libVoice.name} (${libVoice.id})` : `${baseVoice.name} (${baseVoice.id})`;
+function isPersianVoice(voice) {
+  const name = String(voice?.name || '').toLowerCase();
+  const labels = voice?.labels ? JSON.stringify(voice.labels).toLowerCase() : '';
+  const combined = `${name} ${labels}`;
+  return PERSIAN_NAME_KEYWORDS.some((kw) => combined.includes(kw));
+}
 
-  console.log(`🎙️ Generating ${clip.id}.mp3 [role: ${clip.role}, voice: ${voiceLabel}]...`);
+function isFreeApiAllowedVoice(voice) {
+  const category = String(voice?.category || '').toLowerCase();
+  // صداهای کتابخانه عمومی (high_quality / shared / library) در پلن رایگان روی API خطای 402 می‌دهند
+  return category !== 'high_quality' && category !== 'shared' && category !== 'library';
+}
+
+function pickBestVoice(candidates, predicate, fallbackId) {
+  const filtered = candidates.filter(predicate);
+  return filtered[0] || candidates[0] || { voice_id: fallbackId, name: `fallback (${fallbackId})` };
+}
+
+async function discoverVoices() {
+  const res = await fetch('https://api.elevenlabs.io/v1/voices', {
+    headers: { 'xi-api-key': API_KEY },
+  });
+
+  if (!res.ok) {
+    throw new Error(`Failed to fetch voices: ${res.status} - ${await res.text()}`);
+  }
+
+  const data = await res.json();
+  const allVoices = Array.isArray(data?.voices) ? data.voices : [];
+
+  console.log(`🔍 Total voices returned by /v1/voices: ${allVoices.length}`);
+
+  const persianAll = allVoices.filter(isPersianVoice);
+  console.log(
+    `🇮🇷 Persian-named/tagged voices found: ${
+      persianAll.map((v) => `${v.name} [${v.category || 'unknown'}: ${v.voice_id}]`).join(', ') || 'none'
+    }`
+  );
+
+  const usablePersian = persianAll.filter(isFreeApiAllowedVoice);
+  const pool = usablePersian.length > 0 ? usablePersian : allVoices.filter(isFreeApiAllowedVoice);
+
+  if (usablePersian.length === 0 && persianAll.length > 0) {
+    console.log(
+      '⚠️ Persian voices found in account are library/shared voices blocked by ElevenLabs API on free tier; testing free-tier API voices.'
+    );
+  }
+
+  const narratorVoice = pickBestVoice(
+    pool,
+    (v) => {
+      const s = `${v.name} ${JSON.stringify(v.labels || {})}`.toLowerCase();
+      return !FEMALE_HINTS.some((h) => s.includes(h));
+    },
+    FALLBACK_VOICES.narrator.id
+  );
+
+  const womanVoice = pickBestVoice(
+    pool,
+    (v) => {
+      const s = `${v.name} ${JSON.stringify(v.labels || {})}`.toLowerCase();
+      return FEMALE_HINTS.some((h) => s.includes(h));
+    },
+    FALLBACK_VOICES.woman.id
+  );
+
+  const oldManVoice = pickBestVoice(
+    pool,
+    (v) => {
+      const s = `${v.name} ${JSON.stringify(v.labels || {})}`.toLowerCase();
+      return OLD_HINTS.some((h) => s.includes(h)) && !FEMALE_HINTS.some((h) => s.includes(h));
+    },
+    FALLBACK_VOICES.old_man.id
+  );
+
+  const youngManVoice = pickBestVoice(
+    pool,
+    (v) => v.voice_id !== narratorVoice.voice_id && v.voice_id !== oldManVoice.voice_id,
+    FALLBACK_VOICES.young_man.id
+  );
+
+  return {
+    narrator: { voice: narratorVoice, settings: FALLBACK_VOICES.narrator.settings },
+    old_man: { voice: oldManVoice, settings: FALLBACK_VOICES.old_man.settings },
+    woman: { voice: womanVoice, settings: FALLBACK_VOICES.woman.settings },
+    young_man: { voice: youngManVoice, settings: FALLBACK_VOICES.young_man.settings },
+  };
+}
+
+async function generateClip(clip, voiceMap) {
+  const entry = voiceMap[clip.role];
+  const voiceId = entry.voice.voice_id;
+  const voiceName = entry.voice.name;
+
+  console.log(`🎙️ Generating ${clip.id}.mp3 [role: ${clip.role}, voice: ${voiceName} (${voiceId})]...`);
 
   const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
     method: 'POST',
@@ -117,7 +286,7 @@ async function generateClip(clip) {
     body: JSON.stringify({
       text: clip.text,
       model_id: MODEL_ID,
-      voice_settings: baseVoice.settings,
+      voice_settings: entry.settings,
     }),
   });
 
@@ -133,8 +302,9 @@ async function generateClip(clip) {
 }
 
 async function main() {
+  const voiceMap = await discoverVoices();
   for (const clip of CLIPS) {
-    await generateClip(clip);
+    await generateClip(clip, voiceMap);
   }
   console.log('🎉 All voiceovers generated successfully!');
 }

@@ -1,17 +1,28 @@
-import "./index.css";
-import "./fonts";
-import { Composition } from "remotion";
-import { Demo, demoSchema } from "./demo/Demo";
+import React from 'react';
+import { Composition } from 'remotion';
+import { Demo } from './demo/Demo';
+import { Otagh9 } from './otagh9/Otagh9';
+import './fonts';
 
-// Every video = one <Composition>. Add yours below (import it, give it an id, size, fps and length).
-export const RemotionRoot: React.FC = () => (
-  <>
-    {/* Vertical reel 1080x1920, 30fps, 8 s */}
-    <Composition id="Demo" component={Demo} width={1080} height={1920} fps={30} durationInFrames={240}
-      defaultProps={demoSchema} />
-    {/* Same scene, horizontal 1920x1080 (YouTube) */}
-    <Composition id="Demo-Wide" component={Demo} width={1920} height={1080} fps={30} durationInFrames={240}
-      defaultProps={demoSchema} />
-    {/* your videos */}
-  </>
-);
+export const RemotionRoot: React.FC = () => {
+  return (
+    <>
+      <Composition
+        id="Otagh9"
+        component={Otagh9}
+        durationInFrames={1080}
+        fps={30}
+        width={1080}
+        height={1920}
+      />
+      <Composition
+        id="Demo"
+        component={Demo}
+        durationInFrames={150}
+        fps={30}
+        width={1080}
+        height={1920}
+      />
+    </>
+  );
+};

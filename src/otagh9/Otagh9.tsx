@@ -8,6 +8,7 @@ import {
   spring,
   Easing,
 } from 'remotion';
+import { useWaitForPersianFonts } from '../fonts';
 
 const FONT_TITLE = 'Lalezar, sans-serif';
 const FONT_BODY = 'Vazirmatn, sans-serif';
@@ -766,6 +767,8 @@ const Scene7ChoiceScreen: React.FC = () => {
 };
 
 export const Otagh9: React.FC = () => {
+  useWaitForPersianFonts();
+
   return (
     <AbsoluteFill style={{ backgroundColor: '#080d14' }}>
       <div

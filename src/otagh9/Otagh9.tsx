@@ -17,7 +17,6 @@ const FONT_BODY = 'Vazirmatn, sans-serif';
 /* لایه بافت فیلم و ویگنت سینمایی برای عمق بیشتر */
 const FilmAtmosphere: React.FC<{ flashOpacity?: number }> = ({ flashOpacity = 0 }) => {
   const frame = useCurrentFrame();
-  // ذرات معلق گردوغبار در هوا
   const particles = [
     { x: 180, y: 400, r: 3, speed: 1.2 },
     { x: 840, y: 520, r: 4, speed: 0.9 },
@@ -48,7 +47,6 @@ const FilmAtmosphere: React.FC<{ flashOpacity?: number }> = ({ flashOpacity = 0 
         })}
       </svg>
 
-      {/* ویگنت تیره اطراف کادر */}
       <div
         style={{
           position: 'absolute',
@@ -58,7 +56,6 @@ const FilmAtmosphere: React.FC<{ flashOpacity?: number }> = ({ flashOpacity = 0 
         }}
       />
 
-      {/* فلاش دوربین یا برق لحظه‌ای */}
       {flashOpacity > 0 && (
         <div
           style={{
@@ -75,9 +72,10 @@ const FilmAtmosphere: React.FC<{ flashOpacity?: number }> = ({ flashOpacity = 0 
 
 interface SubtitleProps {
   children: React.ReactNode;
+  speaker?: string;
 }
 
-const Subtitle: React.FC<SubtitleProps> = ({ children }) => {
+const Subtitle: React.FC<SubtitleProps> = ({ children, speaker }) => {
   const frame = useCurrentFrame();
   const opacity = interpolate(frame, [0, 10], [0, 1], {
     extrapolateRight: 'clamp',
@@ -100,7 +98,7 @@ const Subtitle: React.FC<SubtitleProps> = ({ children }) => {
         fontSize: 43,
         lineHeight: 1.65,
         color: '#ffffff',
-        backgroundColor: 'rgba(7, 11, 18, 0.62)',
+        backgroundColor: 'rgba(7, 11, 18, 0.65)',
         backdropFilter: 'blur(6px)',
         padding: '22px 32px',
         borderRadius: 22,
@@ -111,6 +109,18 @@ const Subtitle: React.FC<SubtitleProps> = ({ children }) => {
         zIndex: 30,
       }}
     >
+      {speaker && (
+        <div
+          style={{
+            fontSize: 28,
+            color: '#ff5722',
+            fontWeight: 800,
+            marginBottom: 6,
+          }}
+        >
+          {speaker}
+        </div>
+      )}
       {children}
     </div>
   );
@@ -120,7 +130,7 @@ const Highlight: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <span style={{ color: '#f7b731', fontWeight: 800 }}>{children}</span>
 );
 
-/* صحنه ۱: نمای بیرونی هتل متروکه، حصار تخریب، فلاش دوربین نوید */
+/* صحنه ۱: نمای بیرونی هتل متروکه */
 const Scene1HotelExterior: React.FC = () => {
   const frame = useCurrentFrame();
   const scale = interpolate(frame, [0, 210], [1.1, 1], {
@@ -137,7 +147,7 @@ const Scene1HotelExterior: React.FC = () => {
 
   return (
     <AbsoluteFill style={{ backgroundColor: '#080e17', overflow: 'hidden' }}>
-      <Audio src={staticFile('voice/otagh9/scene1.mp3')} />
+      <Audio src={staticFile('voice/otagh9/scene1_narrator.mp3')} />
       <div style={{ width: '100%', height: '100%', transform: `scale(${scale})` }}>
         <svg viewBox="0 0 1080 1920" width="1080" height="1920">
           <defs>
@@ -157,16 +167,11 @@ const Scene1HotelExterior: React.FC = () => {
           </defs>
 
           <rect width="1080" height="1920" fill="url(#nightSky1)" />
-
-          {/* ابرهای شبانه و مه */}
           <ellipse cx="260" cy="310" rx="280" ry="45" fill="#182638" opacity="0.45" />
           <ellipse cx="780" cy="410" rx="320" ry="50" fill="#182638" opacity="0.35" />
-
-          {/* ماه کامل با هاله */}
           <circle cx="840" cy="290" r="64" fill="#efe6cf" opacity="0.9" />
           <circle cx="840" cy="290" r="145" fill="#efe6cf" opacity="0.07" />
 
-          {/* جرثقیل تخریب و گوی آهنی */}
           <g opacity="0.55">
             <rect x="135" y="290" width="22" height="1210" fill="#070c14" />
             <line x1="135" y1="350" x2="157" y2="410" stroke="#182436" strokeWidth="4" />
@@ -176,14 +181,12 @@ const Scene1HotelExterior: React.FC = () => {
             <circle cx="510" cy="565" r="28" fill="#070c14" />
           </g>
 
-          {/* ساختمان اصلی هتل قدیمی با جزئیات معماری */}
           <rect x="190" y="440" width="700" height="1060" rx="6" fill="url(#hotelFacade)" />
           <rect x="215" y="440" width="24" height="1060" fill="#141d2b" />
           <rect x="841" y="440" width="24" height="1060" fill="#141d2b" />
           <polygon points="160,440 540,300 920,440" fill="#111926" />
           <rect x="175" y="435" width="730" height="18" fill="#27364a" />
 
-          {/* تابلوی نئون شکسته بالای هتل */}
           <rect x="370" y="385" width="340" height="58" rx="8" fill="#0a0f17" stroke="#36485e" strokeWidth="4" />
           <text
             x="540"
@@ -197,7 +200,6 @@ const Scene1HotelExterior: React.FC = () => {
             GRAND HOTEL
           </text>
 
-          {/* پنجره‌های طبقات */}
           {[540, 740, 940].map((y, rowIdx) =>
             [285, 485, 685].map((x, colIdx) => {
               const isLit = rowIdx === 1 && colIdx === 2;
@@ -230,16 +232,13 @@ const Scene1HotelExterior: React.FC = () => {
             })
           )}
 
-          {/* سردر ورودی هتل */}
           <polygon points="390,1200 690,1200 720,1245 360,1245" fill="#233042" />
           <rect x="425" y="1245" width="230" height="255" fill="#f5a623" opacity="0.2" />
           <rect x="445" y="1255" width="190" height="245" fill="#17110e" />
 
-          {/* چراغ دیواری کنار در */}
           <circle cx="395" cy="1290" r="95" fill="url(#lampGlow)" />
           <circle cx="395" cy="1290" r="10" fill="#ffd166" />
 
-          {/* زمین و نوار خطر تخریب */}
           <rect x="0" y="1500" width="1080" height="420" fill="#070b12" />
           <rect x="80" y="1430" width="14" height="80" fill="#4b5563" />
           <rect x="330" y="1430" width="14" height="80" fill="#4b5563" />
@@ -248,7 +247,6 @@ const Scene1HotelExterior: React.FC = () => {
           <line x1="80" y1="1445" x2="340" y2="1445" stroke="#f7b731" strokeWidth="8" strokeDasharray="24 16" />
           <line x1="740" y1="1445" x2="990" y2="1445" stroke="#f7b731" strokeWidth="8" strokeDasharray="24 16" />
 
-          {/* شخصیت نوید */}
           <g transform={`translate(${navidX}, ${1255 + walkBob})`}>
             <rect x="24" y="185" width="18" height="65" rx="6" fill="#161d26" />
             <rect x="52" y="185" width="18" height="65" rx="6" fill="#1e2733" />
@@ -282,7 +280,7 @@ const Scene2CorridorDoor9: React.FC = () => {
 
   return (
     <AbsoluteFill style={{ backgroundColor: '#09101a', overflow: 'hidden' }}>
-      <Audio src={staticFile('voice/otagh9/scene2.mp3')} />
+      <Audio src={staticFile('voice/otagh9/scene2_narrator.mp3')} />
       <div style={{ width: '100%', height: '100%', transform: `scale(${zoom})` }}>
         <svg viewBox="0 0 1080 1920" width="1080" height="1920">
           <defs>
@@ -346,15 +344,25 @@ const Scene2CorridorDoor9: React.FC = () => {
   );
 };
 
-/* صحنه ۳: فلاش‌بک هشدار مدیر هتل */
+/* صحنه ۳: فلاش‌بک هشدار مدیر هتل (با دو صدا: راوی + مدیر پیر هتل) */
 const Scene3ManagerWarning: React.FC = () => {
   const frame = useCurrentFrame();
-  const scale = interpolate(frame, [0, 210], [1.06, 1], { extrapolateRight: 'clamp' });
-  const handShake = Math.sin(frame / 3) * 3;
+  const scale = interpolate(frame, [0, 225], [1.06, 1], { extrapolateRight: 'clamp' });
+  const isManagerSpeaking = frame >= 75;
+  const handShake = isManagerSpeaking ? Math.sin(frame / 2.5) * 4 : 0;
+  const mouthOpen = isManagerSpeaking ? Math.abs(Math.sin(frame / 3)) * 10 : 0;
 
   return (
     <AbsoluteFill style={{ backgroundColor: '#0d1520', overflow: 'hidden' }}>
-      <Audio src={staticFile('voice/otagh9/scene3.mp3')} />
+      {/* صدای راوی در ابتدا */}
+      <Sequence from={0} durationInFrames={80}>
+        <Audio src={staticFile('voice/otagh9/scene3_narrator.mp3')} />
+      </Sequence>
+      {/* صدای مدیر پیر هتل از فریم ۷۵ */}
+      <Sequence from={75} durationInFrames={150}>
+        <Audio src={staticFile('voice/otagh9/scene3_manager.mp3')} />
+      </Sequence>
+
       <div style={{ width: '100%', height: '100%', transform: `scale(${scale})` }}>
         <svg viewBox="0 0 1080 1920" width="1080" height="1920">
           <defs>
@@ -396,6 +404,8 @@ const Scene3ManagerWarning: React.FC = () => {
             <path d="M308,244 Q345,268 390,248" stroke="#475569" strokeWidth="11" fill="none" strokeLinecap="round" />
 
             <path d="M275,295 L263,355 L287,355" fill="none" stroke="#b07d5b" strokeWidth="5" strokeLinecap="round" />
+            {/* دهان متحرک هنگام صحبت کردن مدیر هتل */}
+            <ellipse cx="275" cy="402" rx="18" ry={3 + mouthOpen} fill="#5c2b21" />
             <path d="M195,382 Q275,352 355,382 Q335,412 275,398 Q215,412 195,382 Z" fill="#94a3b8" />
 
             <path d="M30,565 Q275,490 520,565 L560,1080 L-10,1080 Z" fill="#1e293b" />
@@ -412,27 +422,44 @@ const Scene3ManagerWarning: React.FC = () => {
         </svg>
       </div>
       <FilmAtmosphere />
-      <Subtitle>
-        مدیر هتل قبلاً به او هشدار داده بود: «هر اتاقی خواستی برو، فقط <Highlight>درِ شماره ۹</Highlight> رو باز نکن.»
-      </Subtitle>
+      {!isManagerSpeaking ? (
+        <Subtitle>مدیر هتل قبلاً به او هشدار داده بود:</Subtitle>
+      ) : (
+        <Subtitle speaker="مدیر هتل:">
+          «هر اتاقی خواستی برو، فقط <Highlight>درِ شماره ۹</Highlight> رو باز نکن.»
+        </Subtitle>
+      )}
     </AbsoluteFill>
   );
 };
 
-/* صحنه ۴: صدای مادر از پشت در */
+/* صحنه ۴: صدای مادر از پشت در (راوی + صدای زنانه مادر + راوی) */
 const Scene4MotherVoice: React.FC = () => {
   const frame = useCurrentFrame();
+  const isMotherSpeaking = frame >= 65 && frame < 165;
   const waveOffset = (frame * 3.5) % 65;
-  const microTremor = frame > 25 && frame < 140 ? Math.sin(frame * 1.8) * 3 : 0;
+  const microTremor = frame >= 65 && frame < 190 ? Math.sin(frame * 1.8) * 3 : 0;
 
   return (
     <AbsoluteFill style={{ backgroundColor: '#090f18', overflow: 'hidden' }}>
-      <Audio src={staticFile('voice/otagh9/scene4.mp3')} />
+      {/* بخش ۱: راوی */}
+      <Sequence from={0} durationInFrames={70}>
+        <Audio src={staticFile('voice/otagh9/scene4_narrator1.mp3')} />
+      </Sequence>
+      {/* بخش ۲: صدای مادر نوید */}
+      <Sequence from={65} durationInFrames={105}>
+        <Audio src={staticFile('voice/otagh9/scene4_mother.mp3')} />
+      </Sequence>
+      {/* بخش ۳: ادامه توضیح راوی */}
+      <Sequence from={165} durationInFrames={135}>
+        <Audio src={staticFile('voice/otagh9/scene4_narrator2.mp3')} />
+      </Sequence>
+
       <svg viewBox="0 0 1080 1920" width="1080" height="1920">
         <rect width="1080" height="1920" fill="#090f18" />
 
         <rect x="850" y="0" width="230" height="1920" fill="#241814" />
-        <rect x="836" y="0" width="14" height="1920" fill="#f7b731" opacity="0.65" />
+        <rect x="836" y="0" width="14" height="1920" fill="#f7b731" opacity={isMotherSpeaking ? 0.9 : 0.55} />
         <rect x="760" y="0" width="80" height="1920" fill="#f7b731" opacity="0.08" />
 
         <g transform={`translate(${145 + microTremor}, 420)`}>
@@ -460,22 +487,31 @@ const Scene4MotherVoice: React.FC = () => {
           <polygon points="120,540 165,530 240,1080 185,1080" fill="#141921" />
         </g>
 
+        {/* امواج صوتی هنگام صحبت مادر پررنگ‌تر می‌شوند */}
         {[0, 1, 2, 3].map((i) => (
           <path
             key={i}
             d={`M ${800 - i * 58 - waveOffset},620 Q ${720 - i * 58 - waveOffset},750 ${800 - i * 58 - waveOffset},880`}
             stroke="#f7b731"
-            strokeWidth={8 - i * 1.2}
+            strokeWidth={isMotherSpeaking ? 11 - i * 1.5 : 6 - i}
             fill="none"
-            opacity={0.85 - i * 0.18}
+            opacity={isMotherSpeaking ? 0.95 - i * 0.18 : 0.45 - i * 0.1}
             strokeLinecap="round"
           />
         ))}
       </svg>
       <FilmAtmosphere />
-      <Subtitle>
-        صدای زنی از داخل می‌گوید: <Highlight>«نوید... بالاخره برگشتی.»</Highlight> این دقیقاً <Highlight>صدای مادرش</Highlight> است؛ مادری که ۱۵ سال پیش فوت کرده.
-      </Subtitle>
+      {frame < 65 && <Subtitle>صدای زنی از داخل می‌گوید:</Subtitle>}
+      {isMotherSpeaking && (
+        <Subtitle speaker="صدای زن (پشت در):">
+          <Highlight>«نوید... بالاخره برگشتی.»</Highlight>
+        </Subtitle>
+      )}
+      {frame >= 165 && (
+        <Subtitle>
+          این دقیقاً <Highlight>صدای مادرش</Highlight> است؛ مادری که ۱۵ سال پیش فوت کرده.
+        </Subtitle>
+      )}
     </AbsoluteFill>
   );
 };
@@ -493,7 +529,7 @@ const Scene5OldPhoto: React.FC = () => {
 
   return (
     <AbsoluteFill style={{ backgroundColor: '#101822', overflow: 'hidden' }}>
-      <Audio src={staticFile('voice/otagh9/scene5.mp3')} />
+      <Audio src={staticFile('voice/otagh9/scene5_narrator.mp3')} />
       <svg viewBox="0 0 1080 1920" width="1080" height="1920">
         <rect width="1080" height="1920" fill="#101822" />
 
@@ -556,7 +592,7 @@ const Scene6DoorknobTurn: React.FC = () => {
 
   return (
     <AbsoluteFill style={{ backgroundColor: '#18100d', overflow: 'hidden' }}>
-      <Audio src={staticFile('voice/otagh9/scene6.mp3')} />
+      <Audio src={staticFile('voice/otagh9/scene6_narrator.mp3')} />
       <svg viewBox="0 0 1080 1920" width="1080" height="1920">
         <defs>
           <linearGradient id="brassPlate" x1="0" y1="0" x2="1" y2="1">
@@ -628,7 +664,7 @@ const Scene7ChoiceScreen: React.FC = () => {
         justifyContent: 'center',
       }}
     >
-      <Audio src={staticFile('voice/otagh9/scene7.mp3')} />
+      <Audio src={staticFile('voice/otagh9/scene7_narrator.mp3')} />
       <FilmAtmosphere />
       <div style={{ textAlign: 'center', marginBottom: 56, zIndex: 30 }}>
         <div
@@ -763,7 +799,6 @@ const Scene7ChoiceScreen: React.FC = () => {
 export const Otagh9: React.FC = () => {
   return (
     <AbsoluteFill style={{ backgroundColor: '#080d14' }}>
-      {/* تیتر ثابت بالای تصویر */}
       <div
         style={{
           position: 'absolute',
@@ -781,26 +816,26 @@ export const Otagh9: React.FC = () => {
         پرونده مرموز: <span style={{ color: '#ff5722' }}>اتاق ۹</span>
       </div>
 
-      {/* تایم‌لاین صحنه‌ها هماهنگ با زمان نریشن فارسی (۳۰ فریم بر ثانیه - مجموع ۴۹ ثانیه = ۱۴۷۰ فریم) */}
+      {/* تایم‌لاین چندصدایی هماهنگ شده (مجموع ۵۰.۵ ثانیه = ۱۵۱۵ فریم) */}
       <Sequence from={0} durationInFrames={210}>
         <Scene1HotelExterior />
       </Sequence>
       <Sequence from={210} durationInFrames={165}>
         <Scene2CorridorDoor9 />
       </Sequence>
-      <Sequence from={375} durationInFrames={210}>
+      <Sequence from={375} durationInFrames={225}>
         <Scene3ManagerWarning />
       </Sequence>
-      <Sequence from={585} durationInFrames={270}>
+      <Sequence from={600} durationInFrames={300}>
         <Scene4MotherVoice />
       </Sequence>
-      <Sequence from={855} durationInFrames={210}>
+      <Sequence from={900} durationInFrames={210}>
         <Scene5OldPhoto />
       </Sequence>
-      <Sequence from={1065} durationInFrames={135}>
+      <Sequence from={1110} durationInFrames={135}>
         <Scene6DoorknobTurn />
       </Sequence>
-      <Sequence from={1200} durationInFrames={270}>
+      <Sequence from={1245} durationInFrames={270}>
         <Scene7ChoiceScreen />
       </Sequence>
     </AbsoluteFill>

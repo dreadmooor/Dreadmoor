@@ -11,19 +11,32 @@ const MODEL_ID = 'eleven_multilingual_v2';
 const OUTPUT_DIR = path.resolve('public/voice/otagh9');
 fs.mkdirSync(OUTPUT_DIR, { recursive: true });
 
-// صداهای استاندارد و مجاز در پلن رایگان ElevenLabs برای نقش‌های داستان
-const DEFAULT_VOICES = {
-  narrator: process.env.ELEVENLABS_NARRATOR_VOICE_ID || 'onwK4e9ZLuTAKqWW03F9', // Daniel - راوی مردانه با لحن آرام و داستان‌گو
-  old_man: process.env.ELEVENLABS_OLD_MAN_VOICE_ID || 'pqHfZKP75CvOlQylNhV4',   // Bill - مرد مسن و جدی (مدیر هتل)
-  woman: process.env.ELEVENLABS_WOMAN_VOICE_ID || 'Xb7hH8MSUJpSbSDYk0k2',     // Alice - زنانه شفاف و احساسی (مادر نوید)
-  young_man: process.env.ELEVENLABS_YOUNG_MAN_VOICE_ID || 'TX3LPaxmHKxFdv7VOQHJ', // Liam - مرد جوان
-};
-
-const ROLE_SETTINGS = {
-  narrator: { stability: 0.65, similarity_boost: 0.78, style: 0.12, use_speaker_boost: true },
-  old_man: { stability: 0.7, similarity_boost: 0.82, style: 0.25, use_speaker_boost: true },
-  woman: { stability: 0.55, similarity_boost: 0.8, style: 0.3, use_speaker_boost: true },
-  young_man: { stability: 0.58, similarity_boost: 0.78, style: 0.2, use_speaker_boost: true },
+// نگاشت نقش‌ها به صداهای انتخاب‌شده در داشبورد ElevenLabs
+const VOICE_ROLES = {
+  narrator: {
+    nameKeywords: ['meisam'],
+    fallbackId: 'onwK4e9ZLuTAKqWW03F9',
+    envKey: 'ELEVENLABS_MEISAM_VOICE_ID',
+    settings: { stability: 0.65, similarity_boost: 0.78, style: 0.12, use_speaker_boost: true },
+  },
+  old_man: {
+    nameKeywords: ['mohsen'],
+    fallbackId: 'pqHfZKP75CvOlQylNhV4',
+    envKey: 'ELEVENLABS_MOHSEN_VOICE_ID',
+    settings: { stability: 0.7, similarity_boost: 0.82, style: 0.25, use_speaker_boost: true },
+  },
+  woman: {
+    nameKeywords: ['leili'],
+    fallbackId: 'Xb7hH8MSUJpSbSDYk0k2',
+    envKey: 'ELEVENLABS_LEILI_VOICE_ID',
+    settings: { stability: 0.55, similarity_boost: 0.8, style: 0.3, use_speaker_boost: true },
+  },
+  young_man: {
+    nameKeywords: ['amin'],
+    fallbackId: 'TX3LPaxmHKxFdv7VOQHJ',
+    envKey: 'ELEVENLABS_AMIN_VOICE_ID',
+    settings: { stability: 0.58, similarity_boost: 0.78, style: 0.2, use_speaker_boost: true },
+  },
 };
 
 // متن دقیق و کامل داستان «اتاق ۹»
@@ -80,12 +93,51 @@ const CLIPS = [
   },
 ];
 
-async function generateClip(clip) {
-  const voiceId = DEFAULT_VOICES[clip.role];
-  const settings = ROLE_SETTINGS[clip.role];
-  console.log(`🎙️ Generating ${clip.id}.mp3 [role: ${clip.role}, voice: ${voiceId}]...`);
+async function resolveVoices() {
+  const resolved = {};
+  let accountVoices = [];
 
-  const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+  try {
+    const res = await fetch('https://api.elevenlabs.io/v1/voices', {
+      headers: { 'xi-api-key': API_KEY },
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data?.voices)) {
+        accountVoices = data.voices;
+      }
+    }
+  } catch {
+    // در صورت عدم دسترسی به لیست صداها، از شناسه پیش‌فرض استفاده می‌شود
+  }
+
+  for (const [role, cfg] of Object.entries(VOICE_ROLES)) {
+    const envOverride = process.env[cfg.envKey];
+    if (envOverride) {
+      resolved[role] = { id: envOverride, name: `${role} (env)`, settings: cfg.settings };
+      continue;
+    }
+
+    const matched = accountVoices.find((v) => {
+      const n = String(v?.name || '').toLowerCase();
+      return cfg.nameKeywords.some((kw) => n.includes(kw));
+    });
+
+    if (matched?.voice_id) {
+      resolved[role] = { id: matched.voice_id, name: matched.name, settings: cfg.settings };
+    } else {
+      resolved[role] = { id: cfg.fallbackId, name: `${role} (default)`, settings: cfg.settings };
+    }
+  }
+
+  return resolved;
+}
+
+async function generateClip(clip, voiceMap) {
+  const voice = voiceMap[clip.role];
+  console.log(`🎙️ Generating ${clip.id}.mp3 [role: ${clip.role}, voice: ${voice.name} (${voice.id})]...`);
+
+  const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voice.id}`, {
     method: 'POST',
     headers: {
       'xi-api-key': API_KEY,
@@ -95,7 +147,7 @@ async function generateClip(clip) {
     body: JSON.stringify({
       text: clip.text,
       model_id: MODEL_ID,
-      voice_settings: settings,
+      voice_settings: voice.settings,
     }),
   });
 
@@ -111,8 +163,9 @@ async function generateClip(clip) {
 }
 
 async function main() {
+  const voiceMap = await resolveVoices();
   for (const clip of CLIPS) {
-    await generateClip(clip);
+    await generateClip(clip, voiceMap);
   }
   console.log('🎉 All voiceovers generated successfully!');
 }

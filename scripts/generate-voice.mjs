@@ -11,22 +11,22 @@ const MODEL_ID = 'eleven_multilingual_v2';
 const OUTPUT_DIR = path.resolve('public/voice/otagh9');
 fs.mkdirSync(OUTPUT_DIR, { recursive: true });
 
-// بانک پیش‌فرض صداها (در صورت نیاز می‌توانید با ELEVENLABS_*_VOICE_ID در محیط override کنید)
+// صداهای استاندارد و مجاز در پلن رایگان ElevenLabs برای نقش‌های داستان
 const DEFAULT_VOICES = {
-  narrator: process.env.ELEVENLABS_NARRATOR_VOICE_ID || 'onwK4e9ZLuTAKqWW03F9', // Daniel - راوی مردانه با لحن آرام و رادیویی
+  narrator: process.env.ELEVENLABS_NARRATOR_VOICE_ID || 'onwK4e9ZLuTAKqWW03F9', // Daniel - راوی مردانه با لحن آرام و داستان‌گو
   old_man: process.env.ELEVENLABS_OLD_MAN_VOICE_ID || 'pqHfZKP75CvOlQylNhV4',   // Bill - مرد مسن و جدی (مدیر هتل)
   woman: process.env.ELEVENLABS_WOMAN_VOICE_ID || 'Xb7hH8MSUJpSbSDYk0k2',     // Alice - زنانه شفاف و احساسی (مادر نوید)
-  young_man: process.env.ELEVENLABS_YOUNG_MAN_VOICE_ID || 'TX3LPaxmHKxFdv7VOQHJ',
+  young_man: process.env.ELEVENLABS_YOUNG_MAN_VOICE_ID || 'TX3LPaxmHKxFdv7VOQHJ', // Liam - مرد جوان
 };
 
 const ROLE_SETTINGS = {
-  narrator: { stability: 0.62, similarity_boost: 0.78, style: 0.15, use_speaker_boost: true },
-  old_man: { stability: 0.68, similarity_boost: 0.82, style: 0.3, use_speaker_boost: true },
-  woman: { stability: 0.52, similarity_boost: 0.8, style: 0.35, use_speaker_boost: true },
-  young_man: { stability: 0.55, similarity_boost: 0.78, style: 0.25, use_speaker_boost: true },
+  narrator: { stability: 0.65, similarity_boost: 0.78, style: 0.12, use_speaker_boost: true },
+  old_man: { stability: 0.7, similarity_boost: 0.82, style: 0.25, use_speaker_boost: true },
+  woman: { stability: 0.55, similarity_boost: 0.8, style: 0.3, use_speaker_boost: true },
+  young_man: { stability: 0.58, similarity_boost: 0.78, style: 0.2, use_speaker_boost: true },
 };
 
-// متن دقیق و کامل داستان «اتاق ۹» بدون اعراب‌گذاری مصنوعی
+// متن دقیق و کامل داستان «اتاق ۹»
 const CLIPS = [
   {
     id: 'scene1_narrator',
@@ -80,38 +80,8 @@ const CLIPS = [
   },
 ];
 
-async function resolveVoicesFromAccount() {
-  const resolved = { ...DEFAULT_VOICES };
-  try {
-    const res = await fetch('https://api.elevenlabs.io/v1/voices', {
-      headers: { 'xi-api-key': API_KEY },
-    });
-    if (!res.ok) return resolved;
-
-    const data = await res.json();
-    const voices = Array.isArray(data?.voices) ? data.voices : [];
-
-    // جستجوی صداهای مرتبط با فارسی یا چندزبانه در کتابخانه اکانت
-    const persianTagged = voices.filter((v) => {
-      const blob = JSON.stringify(v).toLowerCase();
-      return blob.includes('persian') || blob.includes('farsi') || blob.includes('iran');
-    });
-
-    if (persianTagged.length > 0 && !process.env.ELEVENLABS_NARRATOR_VOICE_ID) {
-      const maleMatch = persianTagged.find((v) => v?.labels?.gender === 'male');
-      const femaleMatch = persianTagged.find((v) => v?.labels?.gender === 'female');
-      if (maleMatch?.voice_id) resolved.narrator = maleMatch.voice_id;
-      if (femaleMatch?.voice_id) resolved.woman = femaleMatch.voice_id;
-      console.log('🔎 Found Persian-tagged voices in account library.');
-    }
-  } catch {
-    // در صورت عدم دسترسی یا خطای شبکه، از صداهای پیش‌فرض استفاده می‌شود
-  }
-  return resolved;
-}
-
-async function generateClip(clip, voiceMap) {
-  const voiceId = voiceMap[clip.role];
+async function generateClip(clip) {
+  const voiceId = DEFAULT_VOICES[clip.role];
   const settings = ROLE_SETTINGS[clip.role];
   console.log(`🎙️ Generating ${clip.id}.mp3 [role: ${clip.role}, voice: ${voiceId}]...`);
 
@@ -141,9 +111,8 @@ async function generateClip(clip, voiceMap) {
 }
 
 async function main() {
-  const voiceMap = await resolveVoicesFromAccount();
   for (const clip of CLIPS) {
-    await generateClip(clip, voiceMap);
+    await generateClip(clip);
   }
   console.log('🎉 All voiceovers generated successfully!');
 }

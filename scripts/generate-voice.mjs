@@ -11,23 +11,30 @@ const MODEL_ID = 'eleven_multilingual_v2';
 const OUTPUT_DIR = path.resolve('public/voice/otagh9');
 fs.mkdirSync(OUTPUT_DIR, { recursive: true });
 
-// صداهای استاندارد داخلی ElevenLabs که در پلن رایگان بدون خطای 402 کار می‌کنند
-// (در صورت ارتقای پلن، می‌توانید با ELEVENLABS_*_VOICE_ID صداهای دلخواه را جایگزین کنید)
+// شناسه‌های اختصاصی صداها طبق انتخاب کاربر:
+// - Meisam (راوی): btWlswzMAoBbSI0PWhbz
+// - Mohsen (مدیر هتل): rexsZJO2OhnY5Ihuqj89
+// - Leili (صدای مادر): erDXAXYfyESLe4hXMyU3
+// - Amin (صدای نوید): fvCP6Z9Dzulf2E6NsM8a
 const VOICES = {
   narrator: {
-    id: process.env.ELEVENLABS_NARRATOR_VOICE_ID || 'onwK4e9ZLuTAKqWW03F9', // Daniel - راوی مردانه با لحن آرام و داستان‌گو
+    name: 'Meisam',
+    id: process.env.ELEVENLABS_NARRATOR_VOICE_ID || 'btWlswzMAoBbSI0PWhbz',
     settings: { stability: 0.65, similarity_boost: 0.78, style: 0.12, use_speaker_boost: true },
   },
   old_man: {
-    id: process.env.ELEVENLABS_OLD_MAN_VOICE_ID || 'pqHfZKP75CvOlQylNhV4',   // Bill - مرد مسن و جدی (مدیر هتل)
+    name: 'Mohsen',
+    id: process.env.ELEVENLABS_OLD_MAN_VOICE_ID || 'rexsZJO2OhnY5Ihuqj89',
     settings: { stability: 0.7, similarity_boost: 0.82, style: 0.25, use_speaker_boost: true },
   },
   woman: {
-    id: process.env.ELEVENLABS_WOMAN_VOICE_ID || 'Xb7hH8MSUJpSbSDYk0k2',     // Alice - زنانه شفاف و احساسی (مادر نوید)
+    name: 'Leili',
+    id: process.env.ELEVENLABS_WOMAN_VOICE_ID || 'erDXAXYfyESLe4hXMyU3',
     settings: { stability: 0.55, similarity_boost: 0.8, style: 0.3, use_speaker_boost: true },
   },
   young_man: {
-    id: process.env.ELEVENLABS_YOUNG_MAN_VOICE_ID || 'TX3LPaxmHKxFdv7VOQHJ', // Liam - مرد جوان (نوید)
+    name: 'Amin',
+    id: process.env.ELEVENLABS_YOUNG_MAN_VOICE_ID || 'fvCP6Z9Dzulf2E6NsM8a',
     settings: { stability: 0.58, similarity_boost: 0.78, style: 0.2, use_speaker_boost: true },
   },
 };
@@ -88,7 +95,7 @@ const CLIPS = [
 
 async function generateClip(clip) {
   const voice = VOICES[clip.role];
-  console.log(`🎙️ Generating ${clip.id}.mp3 [role: ${clip.role}, voice: ${voice.id}]...`);
+  console.log(`🎙️ Generating ${clip.id}.mp3 [role: ${clip.role}, voice: ${voice.name} (${voice.id})]...`);
 
   const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voice.id}`, {
     method: 'POST',

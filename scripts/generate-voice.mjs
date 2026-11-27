@@ -11,33 +11,39 @@ const MODEL_ID = 'eleven_multilingual_v2';
 const OUTPUT_DIR = path.resolve('public/voice/otagh9');
 fs.mkdirSync(OUTPUT_DIR, { recursive: true });
 
-// شناسه‌های اختصاصی صداها طبق انتخاب کاربر:
-// - Meisam (راوی): btWlswzMAoBbSI0PWhbz
-// - Mohsen (مدیر هتل): rexsZJO2OhnY5Ihuqj89
-// - Leili (صدای مادر): erDXAXYfyESLe4hXMyU3
-// - Amin (صدای نوید): fvCP6Z9Dzulf2E6NsM8a
-const VOICES = {
+// صداهای استاندارد داخلی ElevenLabs (مجاز روی پلن رایگان از طریق API)
+const FREE_VOICES = {
   narrator: {
-    name: 'Meisam',
-    id: process.env.ELEVENLABS_NARRATOR_VOICE_ID || 'btWlswzMAoBbSI0PWhbz',
+    name: 'Daniel (Free API)',
+    id: 'onwK4e9ZLuTAKqWW03F9',
     settings: { stability: 0.65, similarity_boost: 0.78, style: 0.12, use_speaker_boost: true },
   },
   old_man: {
-    name: 'Mohsen',
-    id: process.env.ELEVENLABS_OLD_MAN_VOICE_ID || 'rexsZJO2OhnY5Ihuqj89',
+    name: 'Bill (Free API)',
+    id: 'pqHfZKP75CvOlQylNhV4',
     settings: { stability: 0.7, similarity_boost: 0.82, style: 0.25, use_speaker_boost: true },
   },
   woman: {
-    name: 'Leili',
-    id: process.env.ELEVENLABS_WOMAN_VOICE_ID || 'erDXAXYfyESLe4hXMyU3',
+    name: 'Alice (Free API)',
+    id: 'Xb7hH8MSUJpSbSDYk0k2',
     settings: { stability: 0.55, similarity_boost: 0.8, style: 0.3, use_speaker_boost: true },
   },
   young_man: {
-    name: 'Amin',
-    id: process.env.ELEVENLABS_YOUNG_MAN_VOICE_ID || 'fvCP6Z9Dzulf2E6NsM8a',
+    name: 'Liam (Free API)',
+    id: 'TX3LPaxmHKxFdv7VOQHJ',
     settings: { stability: 0.58, similarity_boost: 0.78, style: 0.2, use_speaker_boost: true },
   },
 };
+
+// شناسه صداهای اختصاصی درخواستی (در صورت فعال بودن پلن پولی روی اکانت، از طریق ENV یا پرچم --library قابل استفاده‌اند)
+const LIBRARY_VOICES = {
+  narrator: { name: 'Meisam', id: process.env.ELEVENLABS_NARRATOR_VOICE_ID || 'btWlswzMAoBbSI0PWhbz' },
+  old_man: { name: 'Mohsen', id: process.env.ELEVENLABS_OLD_MAN_VOICE_ID || 'rexsZJO2OhnY5Ihuqj89' },
+  woman: { name: 'Leili', id: process.env.ELEVENLABS_WOMAN_VOICE_ID || 'erDXAXYfyESLe4hXMyU3' },
+  young_man: { name: 'Amin', id: process.env.ELEVENLABS_YOUNG_MAN_VOICE_ID || 'fvCP6Z9Dzulf2E6NsM8a' },
+};
+
+const USE_LIBRARY = process.argv.includes('--library') || process.env.ELEVENLABS_USE_LIBRARY === '1';
 
 // متن دقیق و کامل داستان «اتاق ۹»
 const CLIPS = [
@@ -94,10 +100,14 @@ const CLIPS = [
 ];
 
 async function generateClip(clip) {
-  const voice = VOICES[clip.role];
-  console.log(`🎙️ Generating ${clip.id}.mp3 [role: ${clip.role}, voice: ${voice.name} (${voice.id})]...`);
+  const baseVoice = FREE_VOICES[clip.role];
+  const libVoice = LIBRARY_VOICES[clip.role];
+  const voiceId = USE_LIBRARY ? libVoice.id : baseVoice.id;
+  const voiceLabel = USE_LIBRARY ? `${libVoice.name} (${libVoice.id})` : `${baseVoice.name} (${baseVoice.id})`;
 
-  const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voice.id}`, {
+  console.log(`🎙️ Generating ${clip.id}.mp3 [role: ${clip.role}, voice: ${voiceLabel}]...`);
+
+  const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
     method: 'POST',
     headers: {
       'xi-api-key': API_KEY,
@@ -107,7 +117,7 @@ async function generateClip(clip) {
     body: JSON.stringify({
       text: clip.text,
       model_id: MODEL_ID,
-      voice_settings: voice.settings,
+      voice_settings: baseVoice.settings,
     }),
   });
 
